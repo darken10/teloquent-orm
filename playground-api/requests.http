@@ -1,0 +1,35 @@
+### Santé
+GET http://localhost:3000/
+
+### Lister les utilisateurs
+GET http://localhost:3000/users
+
+### Lister les utilisateurs avec leurs articles (eager loading)
+GET http://localhost:3000/users?with=posts
+
+### Créer un utilisateur
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{ "name": "Idrissa", "email": "idrissa@africasys.com" }
+
+### Voir un utilisateur (avec ses articles)
+GET http://localhost:3000/users/1
+
+### Mettre à jour un utilisateur
+PUT http://localhost:3000/users/1
+Content-Type: application/json
+
+{ "name": "Zoumana TRAORE" }
+
+### Supprimer un utilisateur
+DELETE http://localhost:3000/users/3
+
+### Lister les articles (avec auteur)
+GET http://localhost:3000/posts
+
+### Créer un article
+POST http://localhost:3000/posts
+Content-Type: application/json
+
+{ "title": "Mon article", "body": "Contenu...", "user_id": 1 }
