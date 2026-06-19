@@ -4,7 +4,14 @@ import { ModelQueryBuilder } from "./ModelQueryBuilder.js";
 import { HasMany } from "../relations/HasMany.js";
 import { HasOne } from "../relations/HasOne.js";
 import { BelongsTo } from "../relations/BelongsTo.js";
-import { tableName as deriveTable, studly, foreignKey as deriveFk } from "../support/str.js";
+import { BelongsToMany } from "../relations/BelongsToMany.js";
+import {
+  tableName as deriveTable,
+  studly,
+  snake,
+  foreignKey as deriveFk,
+  pivotTable,
+} from "../support/str.js";
 import { fireModelEvent, type ModelEvent } from "../events/ModelEvents.js";
 import { registerGlobalScope, type GlobalScope } from "./scopes.js";
 
@@ -359,6 +366,26 @@ export class Model {
       this,
       foreignKey ?? deriveFk(related.name),
       ownerKey ?? related.primaryKey
+    );
+  }
+
+  belongsToMany<R extends Model>(
+    related: ModelCtor<R>,
+    table?: string,
+    foreignPivotKey?: string,
+    relatedPivotKey?: string,
+    parentKey?: string,
+    relatedKey?: string
+  ): BelongsToMany<R> {
+    const ctor = this.constructor as typeof Model;
+    return new BelongsToMany<R>(
+      related,
+      this,
+      table ?? pivotTable(ctor.name, related.name),
+      foreignPivotKey ?? snake(ctor.name) + "_id",
+      relatedPivotKey ?? snake(related.name) + "_id",
+      parentKey ?? ctor.primaryKey,
+      relatedKey ?? related.primaryKey
     );
   }
 

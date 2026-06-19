@@ -27,6 +27,7 @@ export { Relation } from "./relations/Relation.js";
 export { HasMany } from "./relations/HasMany.js";
 export { HasOne } from "./relations/HasOne.js";
 export { BelongsTo } from "./relations/BelongsTo.js";
+export { BelongsToMany } from "./relations/BelongsToMany.js";
 
 // Schéma & migrations
 export { Schema, SchemaBuilder } from "./schema/SchemaBuilder.js";

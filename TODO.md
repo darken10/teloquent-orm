@@ -80,7 +80,7 @@ Dernière mise à jour : 2026-06-19.
 ## 🔜 À développer
 
 ### Relations avancées
-- [ ] `belongsToMany` (table pivot) + `attach` / `detach` / `sync`
+- [x] `belongsToMany` (table pivot) + `attach` / `detach` / `sync` + eager loading + données pivot
 - [ ] `hasManyThrough` / `hasOneThrough`
 - [ ] Relations polymorphes (`morphTo`, `morphMany`)
 - [ ] Eager loading **imbriqué** : `with("posts.comments")`
@@ -135,8 +135,9 @@ Dernière mise à jour : 2026-06-19.
 ## Suggestions d'ordre de priorité
 
 1. ~~**Soft deletes** + **scopes**~~ ✅ fait
-2. Brancher et tester **MySQL** + **PostgreSQL** (les drivers existent déjà).
-3. **`belongsToMany`** puis **eager loading imbriqué**.
-4. **Runner de migrations** + `Schema().table()` (ALTER).
+2. ~~**`belongsToMany`**~~ ✅ fait
+3. Brancher et tester **MySQL** + **PostgreSQL** (les drivers existent déjà).
+4. **Eager loading imbriqué** (`with("posts.comments")`) + `withCount`.
+5. **Runner de migrations** + `Schema().table()` (ALTER).
 5. **Pagination** (`paginate`, `chunk`).
 6. CI multi-SGBD + publication npm.

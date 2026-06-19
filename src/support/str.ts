@@ -31,3 +31,8 @@ export function tableName(className: string): string {
 export function foreignKey(className: string): string {
   return snake(className) + "_id";
 }
+
+/** Déduit le nom de la table pivot : ("User","Role") -> "role_user" (ordre alpha). */
+export function pivotTable(a: string, b: string): string {
+  return [snake(a), snake(b)].sort().join("_");
+}
