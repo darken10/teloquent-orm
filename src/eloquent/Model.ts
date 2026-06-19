@@ -368,6 +368,10 @@ const MODEL_HANDLER: ProxyHandler<Model> = {
     if (prop in (target as any).attributes) {
       return (target as any).getAttribute(prop);
     }
+    // Accessor calculé sans attribut stocké (getXxxAttribute) ?
+    if (typeof (target as any)[`get${studly(prop)}Attribute`] === "function") {
+      return (target as any).getAttribute(prop);
+    }
     return undefined;
   },
   set(target, prop, value, receiver) {

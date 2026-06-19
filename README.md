@@ -48,6 +48,14 @@ npm run build
 
 > SQLite : utilise `better-sqlite3` si présent, sinon se replie sur `node:sqlite` (Node ≥ 22, sans compilation).
 
+## Tests
+
+```bash
+npm test          # lance la suite vitest
+```
+
+La suite est en deux parties : des **tests unitaires purs** (génération SQL des 3 dialectes, QueryBuilder, helpers, Collection) qui tournent partout sans base, et des **tests d'intégration SQLite** (`tests/model.test.ts`) qui s'exécutent automatiquement si un driver SQLite est disponible (`better-sqlite3`, ou Node ≥ 22 avec `--experimental-sqlite`) et se désactivent proprement sinon.
+
 ## Documentation
 
 Voir **[GUIDE_TECHNIQUE.md](./GUIDE_TECHNIQUE.md)** : architecture détaillée, flux d'une requête, chaque couche, feuille de route, bonnes pratiques.
