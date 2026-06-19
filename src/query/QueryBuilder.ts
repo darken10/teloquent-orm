@@ -199,7 +199,7 @@ export class QueryBuilder<Row = Record<string, unknown>> {
 
   // ------------------------------------------------------------ agrégats
 
-  private async aggregate(fn: string, column = "*"): Promise<number> {
+  protected async aggregate(fn: string, column = "*"): Promise<number> {
     const clone = this.clone();
     clone.components.aggregate = { fn, column };
     clone.components.columns = [];

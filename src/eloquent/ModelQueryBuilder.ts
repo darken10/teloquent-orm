@@ -3,14 +3,20 @@ import type { Connection } from "../connection/Connection.js";
 import type { Grammar } from "../query/grammars/Grammar.js";
 import { Collection } from "./Collection.js";
 import type { Model, ModelCtor } from "./Model.js";
+import { getGlobalScopes } from "./scopes.js";
+import { studly } from "../support/str.js";
+
+type TrashMode = "default" | "with" | "only";
 
 /**
- * Query Builder « Eloquent » : comme le QueryBuilder bas niveau,
- * mais hydrate les lignes en instances de modèle, gère l'eager loading
- * (`with`) et renvoie des Collection.
+ * Query Builder « Eloquent » : comme le QueryBuilder bas niveau, mais hydrate
+ * les lignes en instances de modèle, gère l'eager loading (`with`), les scopes
+ * (locaux/globaux) et les soft deletes.
  */
 export class ModelQueryBuilder<T extends Model> extends QueryBuilder<any> {
   private eagerLoad: string[] = [];
+  private trashMode: TrashMode = "default";
+  private scopesApplied = false;
 
   constructor(
     connection: Connection,
@@ -26,7 +32,48 @@ export class ModelQueryBuilder<T extends Model> extends QueryBuilder<any> {
     return this;
   }
 
+  // ----------------------------------------------------------- soft deletes
+  /** Inclut aussi les enregistrements soft-deleted. */
+  withTrashed(): this {
+    this.trashMode = "with";
+    return this;
+  }
+
+  /** Ne renvoie que les enregistrements soft-deleted. */
+  onlyTrashed(): this {
+    this.trashMode = "only";
+    return this;
+  }
+
+  // ----------------------------------------------------------------- scopes
+  /** Applique un scope local défini par `static scopeXxx(query, ...args)`. */
+  scope(name: string, ...args: unknown[]): this {
+    const method = `scope${studly(name)}`;
+    const fn = (this.model as any)[method];
+    if (typeof fn !== "function") {
+      throw new Error(`Scope "${name}" introuvable : définissez ${this.model.name}.${method}().`);
+    }
+    fn.call(this.model, this, ...args);
+    return this;
+  }
+
+  /** Applique scopes globaux + contrainte soft delete (idempotent). */
+  private applyScopes(): void {
+    if (this.scopesApplied) return;
+    this.scopesApplied = true;
+
+    for (const fn of getGlobalScopes(this.model).values()) fn(this);
+
+    const m = this.model as typeof Model;
+    if (m.softDeletes) {
+      if (this.trashMode === "default") this.whereNull(m.deletedAtColumn);
+      else if (this.trashMode === "only") this.whereNotNull(m.deletedAtColumn);
+    }
+  }
+
+  // -------------------------------------------------------------- exécution
   override async get(): Promise<Collection<T>> {
+    this.applyScopes();
     const rows = await super.get();
     const models = rows.map((row) => (this.model as any).hydrate(row) as T);
     if (this.eagerLoad.length && models.length) {
@@ -46,12 +93,40 @@ export class ModelQueryBuilder<T extends Model> extends QueryBuilder<any> {
     return model;
   }
 
+  override toSql(): { sql: string; bindings: unknown[] } {
+    this.applyScopes();
+    return super.toSql();
+  }
+
+  protected override async aggregate(fn: string, column = "*"): Promise<number> {
+    this.applyScopes();
+    return super.aggregate(fn, column);
+  }
+
   /** Met à jour toutes les lignes correspondant à la requête. */
   override async update(data: Record<string, unknown>): Promise<number> {
+    this.applyScopes();
     if ((this.model as typeof Model).timestamps) {
       data = { ...data, [(this.model as typeof Model).updatedAtColumn]: new Date().toISOString() };
     }
     return super.update(data);
+  }
+
+  /** Soft delete en masse si activé, sinon suppression réelle. */
+  override async delete(): Promise<number> {
+    const m = this.model as typeof Model;
+    if (m.softDeletes) {
+      this.applyScopes();
+      return super.update({ [m.deletedAtColumn]: new Date().toISOString() });
+    }
+    this.applyScopes();
+    return super.delete();
+  }
+
+  /** Suppression réelle, même pour un modèle à soft deletes. */
+  async forceDelete(): Promise<number> {
+    this.applyScopes();
+    return super.delete();
   }
 
   private async eagerLoadRelations(models: T[]): Promise<void> {

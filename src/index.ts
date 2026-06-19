@@ -8,6 +8,7 @@ export { Model } from "./eloquent/Model.js";
 export type { Attributes, CastType, ModelCtor } from "./eloquent/Model.js";
 export { Collection } from "./eloquent/Collection.js";
 export { ModelQueryBuilder } from "./eloquent/ModelQueryBuilder.js";
+export type { GlobalScope } from "./eloquent/scopes.js";
 export * from "./eloquent/decorators.js";
 
 // Connexions

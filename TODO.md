@@ -1,0 +1,142 @@
+# TODO — Teloquent v3
+
+Suivi des fonctionnalités. `[x]` = développé et testé · `[~]` = partiel / à brancher · `[ ]` = à faire.
+
+Dernière mise à jour : 2026-06-19.
+
+---
+
+## ✅ Déjà développé
+
+### Cœur Active Record
+- [x] Classe de base `Model` avec `Proxy` (accès magique aux attributs façon Eloquent)
+- [x] Accès propriété : `user.name` / `user.name = ...`
+- [x] Accessors (`getXxxAttribute`) et mutators (`setXxxAttribute`)
+- [x] Casting des attributs : `int`, `float`, `boolean`, `string`, `json`, `date`, `datetime`
+- [x] Mass assignment : `fillable` / `guarded`
+- [x] Dirty tracking : `isDirty()`, `getDirty()` (UPDATE limité aux colonnes modifiées)
+- [x] Timestamps automatiques (`created_at` / `updated_at`)
+- [x] Sérialisation : `toObject()` / `toJSON()`
+- [x] Hydratation depuis lignes brutes (`hydrate`, `setRawAttributes`)
+
+### Méthodes statiques & persistance
+- [x] `find`, `findOrFail`, `all`, `where`, `with`, `query`, `create`
+- [x] `save` (INSERT / UPDATE), `update`, `delete`, `refresh`
+
+### Query Builder
+- [x] `select`, `distinct`
+- [x] `where` / `orWhere`, `whereIn` / `whereNotIn`, `whereNull` / `whereNotNull`, `whereBetween`, `whereRaw`
+- [x] `join` / `leftJoin`
+- [x] `orderBy`, `latest`, `groupBy`, `having`, `limit` / `offset`, `take` / `skip`
+- [x] Lecture : `get`, `first`, `firstOrFail`, `value`, `pluck`, `exists`
+- [x] Agrégats : `count`, `max`, `min`, `sum`, `avg`
+- [x] Écriture : `insert`, `insertGetId`, `update`, `delete`
+- [x] Debug : `toSql()` · `clone()`
+- [x] Paramètres liés systématiques (anti-injection SQL)
+
+### Grammar (génération SQL multi-dialecte)
+- [x] `Grammar` de base (select / insert / update / delete / agrégats)
+- [x] SQLite (quoting `"..."`, placeholders `?`)
+- [x] MySQL (quoting backticks)
+- [x] PostgreSQL (placeholders `$1, $2...`)
+
+### Relations
+- [x] `hasOne`, `hasMany`, `belongsTo`
+- [x] Chargement lazy (`user.posts().getResults()`)
+- [x] Eager loading `with(...)` (anti N+1, 1 requête par relation)
+- [x] `getRelation`, `setRelation`, `relationLoaded`, `load`
+
+### Connexions & drivers
+- [x] `Connection` (exec, transactions avec commit/rollback)
+- [x] `ConnectionManager` (connexions nommées, défaut)
+- [x] Driver SQLite (`better-sqlite3` + repli `node:sqlite`)
+- [x] Résolution robuste de `better-sqlite3` (cas symlink `file:` / `npm link`)
+
+### Schéma & événements
+- [x] `Blueprint` (increments, integer, string, text, boolean, float, decimal, date, datetime, json, foreignId, timestamps + modifiers nullable/unique/default)
+- [x] `Schema().create / drop / dropIfExists`
+- [x] Base `Migration` (up/down)
+- [x] Événements de modèle (`creating`, `created`, `updating`, `updated`, `deleting`, `deleted`)
+
+### Outillage & qualité
+- [x] Collection enrichie (`pluck`, `keyBy`, `groupBy`, `first`, `last`, `isEmpty`)
+- [x] Décorateurs optionnels (`@table`, `@primaryKey`, `@casts`, `@connection`)
+- [x] Helpers (`snake`, `studly`, `plural`, `tableName`, `foreignKey`)
+- [x] Suite de tests vitest (41 tests : unitaires purs + intégration SQLite)
+- [x] Exemple end-to-end (`examples/basic.ts`)
+- [x] Projet de test API REST Express (`playground-api/`) avec lien `file:`
+- [x] Guide technique complet (`GUIDE_TECHNIQUE.md`)
+
+---
+
+## 🟡 Partiel / à finaliser
+
+- [~] **Driver MySQL** (`mysql2`) — classe écrite, à brancher et tester sur une vraie base
+- [~] **Driver PostgreSQL** (`pg`) — classe écrite, à brancher et tester sur une vraie base
+- [~] **Pool de connexions** — connexion simple pour l'instant (pas de pooling MySQL/PG)
+
+---
+
+## 🔜 À développer
+
+### Relations avancées
+- [ ] `belongsToMany` (table pivot) + `attach` / `detach` / `sync`
+- [ ] `hasManyThrough` / `hasOneThrough`
+- [ ] Relations polymorphes (`morphTo`, `morphMany`)
+- [ ] Eager loading **imbriqué** : `with("posts.comments")`
+- [ ] Eager loading **contraint** : `with({ posts: q => q.where(...) })`
+- [ ] `whereHas` / `has` / `withCount`
+
+### Modèle
+- [x] **Soft deletes** (`deleted_at`, `delete` soft, `withTrashed`, `onlyTrashed`, `restore`, `forceDelete`, `trashed`) + `Blueprint.softDeletes()`
+- [x] **Scopes** locaux (`scopePublished` → `scope("published")`) et globaux (`addGlobalScope`)
+- [ ] `firstOrCreate`, `updateOrCreate`, `findMany`
+- [ ] `$hidden` / `$visible` / `$appends` à la sérialisation
+- [ ] `replicate()` (duplication d'instance)
+- [ ] Événements `saving` / `saved` / `retrieved` + classes Observer dédiées
+
+### Query Builder
+- [ ] Sous-requêtes (`whereIn` avec closure, `selectSub`)
+- [ ] `whereColumn`, groupes de `where` imbriqués (closures `where(q => ...)`)
+- [ ] `orHaving`, `havingRaw`
+- [ ] `rightJoin`, `crossJoin`, jointures avec closure
+- [ ] `upsert` (insert ... on conflict / on duplicate key)
+- [ ] `increment` / `decrement`
+
+### Pagination & performance
+- [ ] `paginate()` / `simplePaginate()`
+- [ ] `chunk()` / `chunkById()`
+- [ ] `cursor()` (itération mémoire-efficace)
+- [ ] Cache de requêtes optionnel
+
+### Schéma & migrations
+- [ ] Runner de migrations (table `migrations`, `migrate` / `rollback` / `refresh`)
+- [ ] `Schema().table()` pour ALTER (ajout/suppression de colonnes)
+- [ ] Contraintes de clés étrangères réelles (`foreign().references().on()`)
+- [ ] Index (`index`, `unique`, `primary` composites)
+- [ ] Seeders structurés
+
+### Drivers & SGBD
+- [ ] Brancher + tester MySQL et PostgreSQL en conditions réelles
+- [ ] Pool de connexions (MySQL/PG)
+- [ ] Driver `node:sqlite` natif activable (Node ≥ 22) en option de config
+- [ ] Lecture/écriture séparées (read/write connections)
+
+### Qualité & DX
+- [ ] Tests d'intégration MySQL + PostgreSQL (CI avec services Docker)
+- [ ] Tests des cas d'erreur (`findOrFail`, contrainte unique, rollback)
+- [ ] Couverture de code (coverage) + seuil minimal
+- [ ] Typage encore plus fort des attributs (génériques sur les colonnes du modèle)
+- [ ] Publication npm (build dual ESM/CJS, `.d.ts`)
+- [ ] CHANGELOG + versionnage sémantique
+
+---
+
+## Suggestions d'ordre de priorité
+
+1. ~~**Soft deletes** + **scopes**~~ ✅ fait
+2. Brancher et tester **MySQL** + **PostgreSQL** (les drivers existent déjà).
+3. **`belongsToMany`** puis **eager loading imbriqué**.
+4. **Runner de migrations** + `Schema().table()` (ALTER).
+5. **Pagination** (`paginate`, `chunk`).
+6. CI multi-SGBD + publication npm.

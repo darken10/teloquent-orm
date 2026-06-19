@@ -99,6 +99,11 @@ export class Blueprint {
     this.add("updated_at", "datetime", { nullable: true });
   }
 
+  /** Ajoute la colonne deleted_at nullable (soft deletes). */
+  softDeletes(name = "deleted_at"): ColumnBuilder {
+    return this.add(name, "datetime", { nullable: true });
+  }
+
   /** Compile le CREATE TABLE pour la grammar donnée. */
   toSql(grammar: Grammar): string {
     const cols = this.columns.map((c) => this.compileColumn(c, grammar));

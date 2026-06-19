@@ -6,6 +6,7 @@ import { HasOne } from "../relations/HasOne.js";
 import { BelongsTo } from "../relations/BelongsTo.js";
 import { tableName as deriveTable, studly, foreignKey as deriveFk } from "../support/str.js";
 import { fireModelEvent, type ModelEvent } from "../events/ModelEvents.js";
+import { registerGlobalScope, type GlobalScope } from "./scopes.js";
 
 export type Attributes = Record<string, unknown>;
 export type CastType = "int" | "float" | "boolean" | "string" | "json" | "date" | "datetime";
@@ -27,6 +28,9 @@ export class Model {
   static timestamps = true;
   static createdAtColumn = "created_at";
   static updatedAtColumn = "updated_at";
+  /** Active les soft deletes (la suppression positionne `deleted_at`). */
+  static softDeletes = false;
+  static deletedAtColumn = "deleted_at";
   /** Attributs assignables en masse. Si vide, on s'appuie sur `guarded`. */
   static fillable: string[] = [];
   static guarded: string[] = ["id"];
@@ -193,6 +197,27 @@ export class Model {
     return ((this as any).query() as ModelQueryBuilder<T>).with(...relations);
   }
 
+  static withTrashed<T extends Model>(this: ModelCtor<T>): ModelQueryBuilder<T> {
+    return ((this as any).query() as ModelQueryBuilder<T>).withTrashed();
+  }
+
+  static onlyTrashed<T extends Model>(this: ModelCtor<T>): ModelQueryBuilder<T> {
+    return ((this as any).query() as ModelQueryBuilder<T>).onlyTrashed();
+  }
+
+  static scope<T extends Model>(
+    this: ModelCtor<T>,
+    name: string,
+    ...args: unknown[]
+  ): ModelQueryBuilder<T> {
+    return ((this as any).query() as ModelQueryBuilder<T>).scope(name, ...args);
+  }
+
+  /** Enregistre un scope global appliqué à toutes les requêtes du modèle. */
+  static addGlobalScope(this: typeof Model, name: string, scope: GlobalScope): void {
+    registerGlobalScope(this, name, scope);
+  }
+
   static async create<T extends Model>(this: ModelCtor<T>, attrs: Attributes): Promise<T> {
     const model = new this(attrs) as T;
     await model.save();
@@ -230,6 +255,29 @@ export class Model {
   async delete(): Promise<boolean> {
     if (!this.$exists) return false;
     const ctor = this.constructor as typeof Model;
+
+    // Soft delete : on positionne deleted_at au lieu de supprimer la ligne.
+    if (ctor.softDeletes) {
+      await fireModelEvent(this, "deleting");
+      const now = new Date().toISOString();
+      this.attributes[ctor.deletedAtColumn] = now;
+      await ctor
+        .getConnection()
+        .table(ctor.getTable())
+        .where(this.getKeyName(), this.getKey())
+        .update({ [ctor.deletedAtColumn]: now });
+      this.syncOriginal();
+      await fireModelEvent(this, "deleted");
+      return true;
+    }
+
+    return this.forceDelete();
+  }
+
+  /** Suppression réelle (ignore les soft deletes). */
+  async forceDelete(): Promise<boolean> {
+    if (!this.$exists) return false;
+    const ctor = this.constructor as typeof Model;
     await fireModelEvent(this, "deleting");
     const affected = await ctor
       .getConnection()
@@ -239,6 +287,25 @@ export class Model {
     this.$exists = false;
     await fireModelEvent(this, "deleted");
     return affected > 0;
+  }
+
+  /** Restaure un enregistrement soft-deleted. */
+  async restore(): Promise<this> {
+    const ctor = this.constructor as typeof Model;
+    this.attributes[ctor.deletedAtColumn] = null;
+    await ctor
+      .getConnection()
+      .table(ctor.getTable())
+      .where(this.getKeyName(), this.getKey())
+      .update({ [ctor.deletedAtColumn]: null });
+    this.syncOriginal();
+    return this;
+  }
+
+  /** L'enregistrement est-il soft-deleted ? */
+  trashed(): boolean {
+    const ctor = this.constructor as typeof Model;
+    return this.attributes[ctor.deletedAtColumn] != null;
   }
 
   async update(attrs: Attributes): Promise<this> {
