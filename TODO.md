@@ -104,8 +104,9 @@ Dernière mise à jour : 2026-06-19.
 - [ ] `increment` / `decrement`
 
 ### Pagination & performance
-- [ ] `paginate()` / `simplePaginate()`
-- [ ] `chunk()` / `chunkById()`
+- [x] `paginate()` / `simplePaginate()` / `forPage()` (scopes & soft deletes respectés)
+- [x] `chunk()` (traitement par lots)
+- [ ] `chunkById()` (chunk stable par clé primaire)
 - [ ] `cursor()` (itération mémoire-efficace)
 - [ ] Cache de requêtes optionnel
 
@@ -136,8 +137,9 @@ Dernière mise à jour : 2026-06-19.
 
 1. ~~**Soft deletes** + **scopes**~~ ✅ fait
 2. ~~**`belongsToMany`**~~ ✅ fait
-3. Brancher et tester **MySQL** + **PostgreSQL** (les drivers existent déjà).
-4. **Eager loading imbriqué** (`with("posts.comments")`) + `withCount`.
-5. **Runner de migrations** + `Schema().table()` (ALTER).
+3. ~~**Pagination** (`paginate`, `simplePaginate`, `chunk`)~~ ✅ fait
+4. Brancher et tester **MySQL** + **PostgreSQL** (les drivers existent déjà).
+5. **Eager loading imbriqué** (`with("posts.comments")`) + `withCount`.
+6. **Runner de migrations** + `Schema().table()` (ALTER).
 5. **Pagination** (`paginate`, `chunk`).
 6. CI multi-SGBD + publication npm.

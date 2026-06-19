@@ -7,6 +7,25 @@ const OPERATORS = new Set([
   "=", "!=", "<>", "<", "<=", ">", ">=", "like", "not like",
 ]);
 
+/** Résultat d'une pagination complète. */
+export interface Paginator<D> {
+  data: D;
+  total: number;
+  perPage: number;
+  currentPage: number;
+  lastPage: number;
+  from: number;
+  to: number;
+}
+
+/** Résultat d'une pagination « simple » (sans COUNT). */
+export interface SimplePaginator<D> {
+  data: D;
+  perPage: number;
+  currentPage: number;
+  hasMore: boolean;
+}
+
 /**
  * Query Builder fluide, inspiré de `Illuminate\Database\Query\Builder`.
  * Toutes les valeurs sont liées en paramètres (anti-injection SQL).
@@ -197,6 +216,61 @@ export class QueryBuilder<Row = Record<string, unknown>> {
     return rows.map((r) => (r as Record<string, unknown>)[key] as T);
   }
 
+  // --------------------------------------------------------- pagination
+
+  /** Limite/saute pour atteindre une page (1-indexée). */
+  forPage(page: number, perPage: number): this {
+    return this.offset((page - 1) * perPage).limit(perPage);
+  }
+
+  /**
+   * Pagination complète avec total et nombre de pages.
+   * `get()` / `count()` étant surchargés par ModelQueryBuilder, l'hydratation,
+   * les scopes et les soft deletes sont automatiquement respectés.
+   */
+  async paginate(page = 1, perPage = 15): Promise<Paginator<Row[]>> {
+    const total = await this.count();
+    const data = await this.forPage(page, perPage).get();
+    const lastPage = Math.max(1, Math.ceil(total / perPage));
+    const from = total === 0 ? 0 : (page - 1) * perPage + 1;
+    return {
+      data,
+      total,
+      perPage,
+      currentPage: page,
+      lastPage,
+      from,
+      to: from === 0 ? 0 : from + data.length - 1,
+    };
+  }
+
+  /** Pagination « simple » (sans COUNT) : indique seulement s'il y a une page suivante. */
+  async simplePaginate(page = 1, perPage = 15): Promise<SimplePaginator<Row[]>> {
+    // On récupère un élément de plus pour savoir s'il existe une page suivante,
+    // mais l'offset reste basé sur perPage.
+    const rows = await this.offset((page - 1) * perPage)
+      .limit(perPage + 1)
+      .get();
+    const hasMore = rows.length > perPage;
+    const data = (hasMore ? rows.slice(0, perPage) : rows) as Row[];
+    return { data, perPage, currentPage: page, hasMore };
+  }
+
+  /** Traite les résultats par lots de `size` (mémoire-efficace). */
+  async chunk(
+    size: number,
+    callback: (rows: Row[], page: number) => void | Promise<void>
+  ): Promise<void> {
+    let page = 1;
+    let count = 0;
+    do {
+      const rows = await this.forPage(page, size).get();
+      count = rows.length;
+      if (count) await callback(rows, page);
+      page++;
+    } while (count === size);
+  }
+
   // ------------------------------------------------------------ agrégats
 
   protected async aggregate(fn: string, column = "*"): Promise<number> {
@@ -204,6 +278,8 @@ export class QueryBuilder<Row = Record<string, unknown>> {
     clone.components.aggregate = { fn, column };
     clone.components.columns = [];
     clone.components.orders = [];
+    clone.components.limit = undefined;
+    clone.components.offset = undefined;
     const { sql, bindings } = this.grammar.compileSelect(clone.components);
     const rows = await this.connection.select<{ aggregate: number | string }>(sql, bindings);
     return Number(rows[0]?.aggregate ?? 0);

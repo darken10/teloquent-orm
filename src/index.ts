@@ -17,6 +17,7 @@ export { Connection } from "./connection/Connection.js";
 
 // Query builder bas niveau
 export { QueryBuilder } from "./query/QueryBuilder.js";
+export type { Paginator, SimplePaginator } from "./query/QueryBuilder.js";
 export { Grammar } from "./query/grammars/Grammar.js";
 export { SQLiteGrammar } from "./query/grammars/SQLiteGrammar.js";
 export { MySQLGrammar } from "./query/grammars/MySQLGrammar.js";
