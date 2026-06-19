@@ -112,6 +112,30 @@ export class ModelQueryBuilder<T extends Model> extends QueryBuilder<any> {
     return super.update(data);
   }
 
+  override async increment(
+    column: string,
+    amount = 1,
+    extra: Record<string, unknown> = {}
+  ): Promise<number> {
+    this.applyScopes();
+    return super.increment(column, amount, this.withTouch(extra));
+  }
+
+  override async decrement(
+    column: string,
+    amount = 1,
+    extra: Record<string, unknown> = {}
+  ): Promise<number> {
+    this.applyScopes();
+    return super.decrement(column, amount, this.withTouch(extra));
+  }
+
+  private withTouch(extra: Record<string, unknown>): Record<string, unknown> {
+    const m = this.model as typeof Model;
+    if (!m.timestamps) return extra;
+    return { ...extra, [m.updatedAtColumn]: new Date().toISOString() };
+  }
+
   /** Soft delete en masse si activé, sinon suppression réelle. */
   override async delete(): Promise<number> {
     const m = this.model as typeof Model;

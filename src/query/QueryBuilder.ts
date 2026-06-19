@@ -333,6 +333,45 @@ export class QueryBuilder<Row = Record<string, unknown>> {
     return result.affectedRows;
   }
 
+  /** Incrémente une colonne (UPDATE col = col + amount). */
+  async increment(
+    column: string,
+    amount = 1,
+    extra: Record<string, unknown> = {}
+  ): Promise<number> {
+    const { sql, bindings } = this.grammar.compileIncrement(this.components, column, amount, extra, false);
+    return (await this.connection.statement(sql, bindings)).affectedRows;
+  }
+
+  /** Décrémente une colonne (UPDATE col = col - amount). */
+  async decrement(
+    column: string,
+    amount = 1,
+    extra: Record<string, unknown> = {}
+  ): Promise<number> {
+    const { sql, bindings } = this.grammar.compileIncrement(this.components, column, amount, extra, true);
+    return (await this.connection.statement(sql, bindings)).affectedRows;
+  }
+
+  /** Insert ou met à jour en cas de conflit (sur `uniqueBy`). */
+  async upsert(
+    rows: Record<string, unknown> | Record<string, unknown>[],
+    uniqueBy: string[],
+    updateColumns?: string[]
+  ): Promise<number> {
+    const list = Array.isArray(rows) ? rows : [rows];
+    if (list.length === 0) return 0;
+    const cols = Object.keys(list[0]);
+    const update = updateColumns ?? cols.filter((c) => !uniqueBy.includes(c));
+    const { sql, bindings } = this.grammar.compileUpsert(
+      this.components.table,
+      list,
+      uniqueBy,
+      update
+    );
+    return (await this.connection.statement(sql, bindings)).affectedRows;
+  }
+
   // ---------------------------------------------------------------- utils
 
   /** Copie superficielle pour les sous-requêtes/agrégats. */

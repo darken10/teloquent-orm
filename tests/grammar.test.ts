@@ -117,6 +117,40 @@ describe("Grammar — INSERT / UPDATE / DELETE", () => {
   });
 });
 
+describe("Grammar — increment / upsert", () => {
+  const g = new SQLiteGrammar();
+
+  it("increment", () => {
+    const components = qb(g).where("id", 1).getComponents();
+    const { sql, bindings } = g.compileIncrement(components, "votes", 3);
+    expect(sql).toBe('update "users" set "votes" = "votes" + ? where "id" = ?');
+    expect(bindings).toEqual([3, 1]);
+  });
+
+  it("decrement avec extra", () => {
+    const components = qb(g).where("id", 1).getComponents();
+    const { sql, bindings } = g.compileIncrement(components, "votes", 2, { updated_at: "now" }, true);
+    expect(sql).toBe('update "users" set "votes" = "votes" - ?, "updated_at" = ? where "id" = ?');
+    expect(bindings).toEqual([2, "now", 1]);
+  });
+
+  it("upsert SQLite/Postgres (on conflict ... excluded)", () => {
+    const { sql } = g.compileUpsert("users", [{ email: "a", name: "A" }], ["email"], ["name"]);
+    expect(sql).toBe(
+      'insert into "users" ("email", "name") values (?, ?) ' +
+        'on conflict ("email") do update set "name" = excluded."name"'
+    );
+  });
+
+  it("upsert MySQL (on duplicate key update)", () => {
+    const { sql } = new MySQLGrammar().compileUpsert("users", [{ email: "a", name: "A" }], ["email"], ["name"]);
+    expect(sql).toBe(
+      "insert into `users` (`email`, `name`) values (?, ?) " +
+        "on duplicate key update `name` = values(`name`)"
+    );
+  });
+});
+
 describe("Grammar — agrégats", () => {
   it("count(*) as aggregate", () => {
     const g = new SQLiteGrammar();

@@ -90,7 +90,8 @@ Dernière mise à jour : 2026-06-19.
 ### Modèle
 - [x] **Soft deletes** (`deleted_at`, `delete` soft, `withTrashed`, `onlyTrashed`, `restore`, `forceDelete`, `trashed`) + `Blueprint.softDeletes()`
 - [x] **Scopes** locaux (`scopePublished` → `scope("published")`) et globaux (`addGlobalScope`)
-- [ ] `firstOrCreate`, `updateOrCreate`, `findMany`
+- [x] `firstOrNew`, `firstOrCreate`, `updateOrCreate`
+- [ ] `findMany`
 - [ ] `$hidden` / `$visible` / `$appends` à la sérialisation
 - [ ] `replicate()` (duplication d'instance)
 - [ ] Événements `saving` / `saved` / `retrieved` + classes Observer dédiées
@@ -100,8 +101,8 @@ Dernière mise à jour : 2026-06-19.
 - [ ] `whereColumn`, groupes de `where` imbriqués (closures `where(q => ...)`)
 - [ ] `orHaving`, `havingRaw`
 - [ ] `rightJoin`, `crossJoin`, jointures avec closure
-- [ ] `upsert` (insert ... on conflict / on duplicate key)
-- [ ] `increment` / `decrement`
+- [x] `upsert` (on conflict / on duplicate key, multi-dialecte)
+- [x] `increment` / `decrement` (instance + masse)
 
 ### Pagination & performance
 - [x] `paginate()` / `simplePaginate()` / `forPage()` (scopes & soft deletes respectés)

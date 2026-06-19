@@ -167,6 +167,51 @@ export abstract class Grammar {
     return { sql: this.finalize(sql), bindings };
   }
 
+  // ------------------------------------------------------ INCREMENT / DECREMENT
+
+  compileIncrement(
+    q: QueryComponents,
+    column: string,
+    amount: number,
+    extra: Record<string, unknown> = {},
+    decrement = false
+  ): CompiledQuery {
+    const bindings: unknown[] = [];
+    const op = decrement ? "-" : "+";
+    const sets = [`${this.wrap(column)} = ${this.wrap(column)} ${op} ?`];
+    bindings.push(Math.abs(amount));
+    for (const [col, val] of Object.entries(extra)) {
+      sets.push(`${this.wrap(col)} = ?`);
+      bindings.push(val);
+    }
+    let sql = `update ${this.wrap(q.table)} set ${sets.join(", ")}`;
+    const where = this.compileWheres(q.wheres, bindings);
+    if (where) sql += ` where ${where}`;
+    return { sql: this.finalize(sql), bindings };
+  }
+
+  // ---------------------------------------------------------------- UPSERT
+
+  /**
+   * Style « ON CONFLICT ... DO UPDATE SET col = excluded.col » (SQLite, Postgres).
+   * MySQL surcharge cette méthode.
+   */
+  compileUpsert(
+    table: string,
+    rows: Record<string, unknown>[],
+    uniqueBy: string[],
+    updateColumns: string[]
+  ): CompiledQuery {
+    const insert = this.compileInsert(table, rows); // déjà finalisé (placeholders OK)
+    const conflict = uniqueBy.map((c) => this.wrap(c)).join(", ");
+    const updates = updateColumns
+      .map((c) => `${this.wrap(c)} = excluded.${this.wrap(c)}`)
+      .join(", ");
+    // La partie ajoutée ne contient aucun placeholder : sûr d'appender après finalize.
+    const sql = `${insert.sql} on conflict (${conflict}) do update set ${updates}`;
+    return { sql, bindings: insert.bindings };
+  }
+
   // ---------------------------------------------------------------- SCHEMA
 
   /** Type SQL d'une colonne selon le type abstrait du Blueprint. */

@@ -231,6 +231,54 @@ export class Model {
     return model;
   }
 
+  /** Trouve la 1re ligne correspondant à `attributes`, sinon instancie (sans sauver). */
+  static async firstOrNew<T extends Model>(
+    this: ModelCtor<T>,
+    attributes: Attributes,
+    values: Attributes = {}
+  ): Promise<T> {
+    const q = (this as any).query() as ModelQueryBuilder<T>;
+    for (const [k, v] of Object.entries(attributes)) q.where(k, v as never);
+    const found = await q.first();
+    if (found) return found;
+    const model = new this() as T;
+    (model as Model).forceFill({ ...attributes, ...values });
+    return model;
+  }
+
+  /** Comme firstOrNew, mais persiste la nouvelle instance. */
+  static async firstOrCreate<T extends Model>(
+    this: ModelCtor<T>,
+    attributes: Attributes,
+    values: Attributes = {}
+  ): Promise<T> {
+    const model = await (this as any).firstOrNew(attributes, values) as T;
+    if (!(model as Model).$exists) await (model as Model).save();
+    return model;
+  }
+
+  /** Met à jour la ligne correspondante ou la crée. */
+  static async updateOrCreate<T extends Model>(
+    this: ModelCtor<T>,
+    attributes: Attributes,
+    values: Attributes = {}
+  ): Promise<T> {
+    const model = await (this as any).firstOrNew(attributes, values) as T;
+    (model as Model).forceFill(values);
+    await (model as Model).save();
+    return model;
+  }
+
+  /** Insert/update en masse en cas de conflit sur `uniqueBy`. */
+  static async upsert(
+    this: typeof Model,
+    rows: Attributes | Attributes[],
+    uniqueBy: string[],
+    updateColumns?: string[]
+  ): Promise<number> {
+    return this.getConnection().table(this.getTable()).upsert(rows, uniqueBy, updateColumns);
+  }
+
   // ----------------------------------------------------------- persistance
   async save(): Promise<this> {
     const ctor = this.constructor as typeof Model;
@@ -318,6 +366,32 @@ export class Model {
   async update(attrs: Attributes): Promise<this> {
     this.fill(attrs);
     return this.save();
+  }
+
+  /** Incrémente une colonne en base et localement. */
+  async increment(column: string, amount = 1): Promise<this> {
+    const ctor = this.constructor as typeof Model;
+    await ctor
+      .getConnection()
+      .table(ctor.getTable())
+      .where(this.getKeyName(), this.getKey())
+      .increment(column, amount);
+    this.attributes[column] = Number(this.attributes[column] ?? 0) + amount;
+    this.syncOriginal();
+    return this;
+  }
+
+  /** Décrémente une colonne en base et localement. */
+  async decrement(column: string, amount = 1): Promise<this> {
+    const ctor = this.constructor as typeof Model;
+    await ctor
+      .getConnection()
+      .table(ctor.getTable())
+      .where(this.getKeyName(), this.getKey())
+      .decrement(column, amount);
+    this.attributes[column] = Number(this.attributes[column] ?? 0) - amount;
+    this.syncOriginal();
+    return this;
   }
 
   /** Recharge l'instance depuis la base. */
