@@ -34,8 +34,14 @@ export class ColumnBuilder {
  */
 export class Blueprint {
   private columns: ColumnSpec[] = [];
+  private dropped: string[] = [];
 
   constructor(public readonly table: string) {}
+
+  /** Marque une colonne à supprimer (mode ALTER). */
+  dropColumn(name: string): void {
+    this.dropped.push(name);
+  }
 
   private add(name: string, type: string, opts: Partial<ColumnSpec> = {}): ColumnBuilder {
     const spec: ColumnSpec = {
@@ -108,6 +114,18 @@ export class Blueprint {
   toSql(grammar: Grammar): string {
     const cols = this.columns.map((c) => this.compileColumn(c, grammar));
     return `create table ${grammar.wrap(this.table)} (${cols.join(", ")})`;
+  }
+
+  /** Compile les instructions ALTER TABLE (ajout/suppression de colonnes). */
+  toAlterSql(grammar: Grammar): string[] {
+    const stmts: string[] = [];
+    for (const c of this.columns) {
+      stmts.push(`alter table ${grammar.wrap(this.table)} add column ${this.compileColumn(c, grammar)}`);
+    }
+    for (const name of this.dropped) {
+      stmts.push(`alter table ${grammar.wrap(this.table)} drop column ${grammar.wrap(name)}`);
+    }
+    return stmts;
   }
 
   private compileColumn(c: ColumnSpec, grammar: Grammar): string {

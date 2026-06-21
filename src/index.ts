@@ -34,6 +34,8 @@ export { BelongsToMany } from "./relations/BelongsToMany.js";
 export { Schema, SchemaBuilder } from "./schema/SchemaBuilder.js";
 export { Blueprint, ColumnBuilder } from "./schema/Blueprint.js";
 export { Migration } from "./schema/Migration.js";
+export { Migrator } from "./schema/Migrator.js";
+export type { MigrationEntry, MigrationStatus } from "./schema/Migrator.js";
 
 // Événements
 export * as ModelEvents from "./events/ModelEvents.js";

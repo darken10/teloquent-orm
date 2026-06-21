@@ -114,8 +114,8 @@ Dernière mise à jour : 2026-06-19.
 - [ ] Cache de requêtes optionnel
 
 ### Schéma & migrations
-- [ ] Runner de migrations (table `migrations`, `migrate` / `rollback` / `refresh`)
-- [ ] `Schema().table()` pour ALTER (ajout/suppression de colonnes)
+- [x] Runner de migrations (`Migrator` : table `migrations`, `run` / `rollback` / `reset` / `refresh` / `status`, batches)
+- [x] `Schema().table()` pour ALTER (ajout/suppression de colonnes) + `hasTable`
 - [ ] Contraintes de clés étrangères réelles (`foreign().references().on()`)
 - [ ] Index (`index`, `unique`, `primary` composites)
 - [ ] Seeders structurés
@@ -145,6 +145,7 @@ Dernière mise à jour : 2026-06-19.
 4. ~~**MySQL + PostgreSQL** (validation PG + infra docker/CI multi-dialecte)~~ ✅ fait (confirmer MySQL sur vrai serveur)
 5. ~~**Eager loading imbriqué** + `withCount`~~ ✅ fait
 6. ~~**Query builder avancé** (`whereHas`, where imbriqués, `whereColumn`)~~ ✅ fait
-7. **Runner de migrations** + `Schema().table()` (ALTER), ou publication npm.
+7. ~~**Runner de migrations** + `Schema().table()` (ALTER)~~ ✅ fait
+8. **Publication npm** (build dual ESM/CJS, .d.ts, CHANGELOG) ou `belongsToMany` avancé / soft deletes en cascade.
 5. **Pagination** (`paginate`, `chunk`).
 6. CI multi-SGBD + publication npm.
