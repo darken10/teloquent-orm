@@ -94,6 +94,7 @@ dd("Migrator + Schema().table()", () => {
     class Item extends Model {
       static override timestamps = false;
       static override fillable = ["label", "qty"];
+      declare id: number;
       declare label: string;
       declare qty: number;
     }
