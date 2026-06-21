@@ -21,10 +21,10 @@ export class HasOne<R extends Model> extends Relation<R> {
   }
 
   match(parents: Model[], results: R[], relationName: string): void {
-    const byKey = new Map<unknown, R>();
-    for (const child of results) byKey.set(child.getAttribute(this.foreignKey), child);
+    const byKey = new Map<string, R>();
+    for (const child of results) byKey.set(String(child.getAttribute(this.foreignKey)), child);
     for (const parent of parents) {
-      parent.setRelation(relationName, byKey.get(parent.getAttribute(this.localKey)) ?? null);
+      parent.setRelation(relationName, byKey.get(String(parent.getAttribute(this.localKey))) ?? null);
     }
   }
 }

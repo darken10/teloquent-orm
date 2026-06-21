@@ -25,10 +25,10 @@ export class BelongsTo<R extends Model> extends Relation<R> {
   }
 
   match(parents: Model[], results: R[], relationName: string): void {
-    const byOwner = new Map<unknown, R>();
-    for (const owner of results) byOwner.set(owner.getAttribute(this.localKey), owner);
+    const byOwner = new Map<string, R>();
+    for (const owner of results) byOwner.set(String(owner.getAttribute(this.localKey)), owner);
     for (const parent of parents) {
-      parent.setRelation(relationName, byOwner.get(parent.getAttribute(this.foreignKey)) ?? null);
+      parent.setRelation(relationName, byOwner.get(String(parent.getAttribute(this.foreignKey))) ?? null);
     }
   }
 }

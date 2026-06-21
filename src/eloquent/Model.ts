@@ -314,7 +314,7 @@ export class Model {
     // Soft delete : on positionne deleted_at au lieu de supprimer la ligne.
     if (ctor.softDeletes) {
       await fireModelEvent(this, "deleting");
-      const now = new Date().toISOString();
+      const now = new Date();
       this.attributes[ctor.deletedAtColumn] = now;
       await ctor
         .getConnection()
@@ -408,7 +408,7 @@ export class Model {
   protected touchTimestamps(): void {
     const ctor = this.constructor as typeof Model;
     if (!ctor.timestamps) return;
-    const now = new Date().toISOString();
+    const now = new Date();
     if (!this.$exists) this.attributes[ctor.createdAtColumn] ??= now;
     this.attributes[ctor.updatedAtColumn] = now;
   }

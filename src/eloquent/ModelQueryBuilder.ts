@@ -107,7 +107,7 @@ export class ModelQueryBuilder<T extends Model> extends QueryBuilder<any> {
   override async update(data: Record<string, unknown>): Promise<number> {
     this.applyScopes();
     if ((this.model as typeof Model).timestamps) {
-      data = { ...data, [(this.model as typeof Model).updatedAtColumn]: new Date().toISOString() };
+      data = { ...data, [(this.model as typeof Model).updatedAtColumn]: new Date() };
     }
     return super.update(data);
   }
@@ -133,7 +133,7 @@ export class ModelQueryBuilder<T extends Model> extends QueryBuilder<any> {
   private withTouch(extra: Record<string, unknown>): Record<string, unknown> {
     const m = this.model as typeof Model;
     if (!m.timestamps) return extra;
-    return { ...extra, [m.updatedAtColumn]: new Date().toISOString() };
+    return { ...extra, [m.updatedAtColumn]: new Date() };
   }
 
   /** Soft delete en masse si activé, sinon suppression réelle. */
@@ -141,7 +141,7 @@ export class ModelQueryBuilder<T extends Model> extends QueryBuilder<any> {
     const m = this.model as typeof Model;
     if (m.softDeletes) {
       this.applyScopes();
-      return super.update({ [m.deletedAtColumn]: new Date().toISOString() });
+      return super.update({ [m.deletedAtColumn]: new Date() });
     }
     this.applyScopes();
     return super.delete();

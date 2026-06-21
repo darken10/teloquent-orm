@@ -93,15 +93,15 @@ export class BelongsToMany<R extends Model> {
   }
 
   match(parents: Model[], results: R[], relationName: string): void {
-    const grouped = new Map<unknown, R[]>();
+    const grouped = new Map<string, R[]>();
     for (const child of results) {
-      const fk = child.getAttribute(PIVOT_FK);
+      const fk = String(child.getAttribute(PIVOT_FK));
       delete (child.getRawAttributes() as Record<string, unknown>)[PIVOT_FK]; // nettoyage
       if (!grouped.has(fk)) grouped.set(fk, []);
       grouped.get(fk)!.push(child);
     }
     for (const parent of parents) {
-      const key = parent.getAttribute(this.parentKey);
+      const key = String(parent.getAttribute(this.parentKey));
       parent.setRelation(relationName, Collection.fromArray(grouped.get(key) ?? []));
     }
   }

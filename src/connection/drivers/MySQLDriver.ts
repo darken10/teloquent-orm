@@ -46,16 +46,25 @@ export class MySQLDriver implements Driver {
   }
 
   async select<T = Record<string, unknown>>(sql: string, bindings: Bindings): Promise<T[]> {
-    const [rows] = await this.ensure().query(sql, bindings);
+    const [rows] = await this.ensure().query(sql, this.normalize(bindings));
     return rows as T[];
   }
 
   async statement(sql: string, bindings: Bindings): Promise<StatementResult> {
-    const [result] = await this.ensure().query(sql, bindings);
+    const [result] = await this.ensure().query(sql, this.normalize(bindings));
     return {
       affectedRows: result.affectedRows ?? 0,
       lastInsertId: result.insertId,
     };
+  }
+
+  /** MySQL attend 'YYYY-MM-DD HH:MM:SS' (UTC) pour les colonnes datetime. */
+  private normalize(bindings: Bindings): unknown[] {
+    return bindings.map((b) => {
+      if (b instanceof Date) return b.toISOString().slice(0, 19).replace("T", " ");
+      if (typeof b === "boolean") return b ? 1 : 0;
+      return b;
+    });
   }
 
   async beginTransaction(): Promise<void> {

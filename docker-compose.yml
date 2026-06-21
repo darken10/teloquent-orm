@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: teloquent
       POSTGRES_DB: teloquent
     ports:
-      - "5432:5432"
+      - "5433:5432" # 5432 souvent déjà pris en local -> on expose sur 5433
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U teloquent"]
       interval: 3s

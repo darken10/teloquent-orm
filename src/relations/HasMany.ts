@@ -22,14 +22,16 @@ export class HasMany<R extends Model> extends Relation<R> {
   }
 
   match(parents: Model[], results: R[], relationName: string): void {
-    const grouped = new Map<unknown, R[]>();
+    // Clés canonicalisées en chaîne : certains drivers (pg) renvoient les
+    // bigint comme des strings, d'autres comme des nombres.
+    const grouped = new Map<string, R[]>();
     for (const child of results) {
-      const fk = child.getAttribute(this.foreignKey);
+      const fk = String(child.getAttribute(this.foreignKey));
       if (!grouped.has(fk)) grouped.set(fk, []);
       grouped.get(fk)!.push(child);
     }
     for (const parent of parents) {
-      const key = parent.getAttribute(this.localKey);
+      const key = String(parent.getAttribute(this.localKey));
       parent.setRelation(relationName, Collection.fromArray(grouped.get(key) ?? []));
     }
   }

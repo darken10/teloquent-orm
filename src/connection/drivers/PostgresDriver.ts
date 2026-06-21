@@ -16,13 +16,15 @@ export class PostgresDriver implements Driver {
 
   async connect(): Promise<void> {
     if (this.client) return;
-    let pg: any;
+    let pgModule: any;
     try {
       // @ts-ignore — peerDependency optionnelle
-      pg = await import("pg");
+      pgModule = await import("pg");
     } catch {
       throw new Error("Le driver PostgreSQL nécessite le paquet 'pg'. Installez-le : npm i pg");
     }
+    // Interop ESM/CJS : selon le bundler, Client est sous .default ou à la racine.
+    const pg = pgModule.default ?? pgModule;
     this.client = new pg.Client({
       host: this.config.host ?? "127.0.0.1",
       port: this.config.port ?? 5432,
@@ -47,12 +49,12 @@ export class PostgresDriver implements Driver {
   }
 
   async select<T = Record<string, unknown>>(sql: string, bindings: Bindings): Promise<T[]> {
-    const res = await this.ensure().query(sql, bindings);
+    const res = await this.ensure().query(sql, this.normalize(bindings));
     return res.rows as T[];
   }
 
   async statement(sql: string, bindings: Bindings): Promise<StatementResult> {
-    const res = await this.ensure().query(sql, bindings);
+    const res = await this.ensure().query(sql, this.normalize(bindings));
     // Pour un INSERT ... RETURNING <pk>, la valeur générée est la 1re colonne
     // de la 1re ligne renvoyée (nom de clé primaire agnostique).
     const first = res.rows?.[0];
@@ -61,6 +63,11 @@ export class PostgresDriver implements Driver {
       affectedRows: res.rowCount ?? 0,
       lastInsertId,
     };
+  }
+
+  /** Envoie les Date en ISO (UTC) ; pg gère le reste nativement. */
+  private normalize(bindings: Bindings): unknown[] {
+    return bindings.map((b) => (b instanceof Date ? b.toISOString() : b));
   }
 
   async beginTransaction(): Promise<void> {

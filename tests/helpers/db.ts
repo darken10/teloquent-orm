@@ -28,7 +28,7 @@ export function testConfig(): ConnectionConfig {
       return {
         driver: "pgsql",
         host: process.env.PG_HOST ?? "127.0.0.1",
-        port: Number(process.env.PG_PORT ?? 5432),
+        port: Number(process.env.PG_PORT ?? 5433),
         username: process.env.PG_USER ?? "teloquent",
         password: process.env.PG_PASSWORD ?? "teloquent",
         database: process.env.PG_DATABASE ?? "teloquent",
