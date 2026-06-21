@@ -65,7 +65,7 @@
   header.className = "topbar";
   header.innerHTML =
     '<button class="icon-btn" id="menuToggle" aria-label="Menu">☰</button>' +
-    '<a class="brand" href="index.html"><span class="logo">T</span> Teloquent <span class="ver">v1</span></a>' +
+    '<a class="brand" href="index.html"><span class="logo">T</span> Teloquent <span class="ver">v2</span></a>' +
     '<div class="spacer"></div>' +
     '<div class="search-wrap"><input id="search" type="text" placeholder="Rechercher…  ( / )" autocomplete="off"></div>' +
     '<button class="icon-btn" id="themeToggle" aria-label="Thème">☾</button>';
@@ -116,7 +116,7 @@
   // ----- Footer
   const footer = document.createElement("footer");
   footer.innerHTML =
-    'Teloquent v1 — ORM TypeScript inspiré de Laravel Eloquent · Licence MIT · ' +
+    'Teloquent v2 — ORM TypeScript inspiré de Laravel Eloquent · Licence MIT · ' +
     '<a href="https://www.npmjs.com/package/teloquent">npm</a>';
   document.body.appendChild(footer);
 

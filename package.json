@@ -1,6 +1,6 @@
 {
   "name": "teloquent",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Un ORM TypeScript Active Record inspiré de Laravel Eloquent.",
   "type": "module",
   "sideEffects": false,
