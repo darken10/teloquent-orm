@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRUD — Teloquent</title>
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <h1 class="page-title">CRUD</h1>
+  <p class="page-intro">Créer, lire, mettre à jour et supprimer des enregistrements, façon Eloquent.</p>
+
+  <h2>Créer</h2>
+  <div class="code-block"><pre><code class="language-typescript">// create() : instancie + sauvegarde, renvoie le modèle avec son id
+const u = await User.create({ name: "Inoussa ZERBO", email: "z@africasys.com" });
+u.id; // 1
+
+// new + save()
+const u2 = new User({ name: "Awa" });
+await u2.save();</code></pre></div>
+  <div class="callout">L'<code>id</code> auto-incrémenté est récupéré automatiquement après l'insertion, quel que soit le SGBD (lastInsertId pour SQLite/MySQL, <code>RETURNING</code> pour PostgreSQL).</div>
+
+  <h2>Lire</h2>
+  <div class="code-block"><pre><code class="language-typescript">await User.find(1);            // User | null
+await User.findOrFail(1);      // User (throw si absent)
+await User.all();              // Collection&lt;User&gt;
+
+await User.where("is_active", true).get();      // Collection&lt;User&gt;
+await User.where("email", "z@a.com").first();   // User | null
+await User.query().where("age", "&gt;", 18).firstOrFail();</code></pre></div>
+
+  <h2>Mettre à jour</h2>
+  <div class="code-block"><pre><code class="language-typescript">// Sur une instance (dirty tracking : seules les colonnes modifiées sont écrites)
+const u = await User.findOrFail(1);
+u.name = "Inoussa Z.";
+await u.save();
+
+// Raccourci fill + save
+await u.update({ name: "X", email: "x@a.com" });
+
+// En masse via le query builder
+await User.query().where("is_active", false).update({ status: "archived" });</code></pre></div>
+
+  <h2>Supprimer</h2>
+  <div class="code-block"><pre><code class="language-typescript">const u = await User.findOrFail(1);
+await u.delete();   // true
+
+// En masse
+await User.query().where("spam", true).delete();</code></pre></div>
+  <div class="callout tip">Si le modèle active les <a href="soft-deletes.html">soft deletes</a>, <code>delete()</code> positionne <code>deleted_at</code> au lieu de supprimer la ligne.</div>
+
+  <h2>Rafraîchir & recharger</h2>
+  <div class="code-block"><pre><code class="language-typescript">await u.refresh(); // recharge les attributs depuis la base</code></pre></div>
+
+  <h2>Helpers pratiques</h2>
+  <p>Voir la page <a href="helpers.html">Helpers CRUD</a> pour <code>firstOrCreate</code>, <code>updateOrCreate</code>, <code>upsert</code>, <code>increment</code>/<code>decrement</code>.</p>
+  <div class="code-block"><pre><code class="language-typescript">await User.firstOrCreate({ email: "z@a.com" }, { name: "Inoussa ZERBO" });
+await User.updateOrCreate({ email: "z@a.com" }, { name: "Inoussa Z." });
+await user.increment("votes", 5);</code></pre></div>
+
+  <h2>État de l'instance</h2>
+  <table>
+    <tr><th>Méthode</th><th>Renvoie</th></tr>
+    <tr><td><code>getKey()</code></td><td>Valeur de la clé primaire</td></tr>
+    <tr><td><code>getKeyName()</code></td><td>Nom de la clé primaire</td></tr>
+    <tr><td><code>isDirty()</code></td><td><code>true</code> si des attributs ont changé</td></tr>
+    <tr><td><code>getDirty()</code></td><td>Objet des attributs modifiés (ou <code>null</code>)</td></tr>
+    <tr><td><code>$exists</code></td><td><code>true</code> si l'enregistrement existe en base</td></tr>
+    <tr><td><code>toJSON()</code> / <code>toObject()</code></td><td>Représentation sérialisée</td></tr>
+  </table>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

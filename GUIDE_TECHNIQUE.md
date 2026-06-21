@@ -25,7 +25,7 @@ class User extends Model {
   declare name: string;   // 'declare' = typage seul, aucun champ réel émis
 }
 const u = new User();
-u.name = "Zoumana";       // intercepté -> setAttribute('name', ...)
+u.name = "Inoussa ZERBO";       // intercepté -> setAttribute('name', ...)
 console.log(u.name);      // intercepté -> getAttribute('name')
 ```
 

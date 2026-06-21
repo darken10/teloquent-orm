@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Query Builder — Teloquent</title>
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <h1 class="page-title">Query Builder</h1>
+  <p class="page-intro">Une API fluide pour construire des requêtes SQL. Accessible via <code>Model.query()</code> ou directement <code>Model.where(...)</code>. Toutes les valeurs sont liées en paramètres (anti-injection).</p>
+
+  <h2>Sélection & conditions</h2>
+  <div class="code-block"><pre><code class="language-typescript">User.query()
+  .select("id", "name", "email")
+  .where("age", "&gt;", 18)
+  .orWhere("role", "admin")
+  .orderBy("name", "desc")
+  .limit(10)
+  .offset(20);</code></pre></div>
+
+  <h3>Variantes de where</h3>
+  <table>
+    <tr><th>Méthode</th><th>SQL généré</th></tr>
+    <tr><td><code>where("a", 1)</code></td><td><code>a = ?</code></td></tr>
+    <tr><td><code>where("a", "&gt;", 1)</code></td><td><code>a &gt; ?</code></td></tr>
+    <tr><td><code>orWhere(...)</code></td><td><code>or ...</code></td></tr>
+    <tr><td><code>whereIn("a", [1,2])</code></td><td><code>a in (?, ?)</code></td></tr>
+    <tr><td><code>whereNotIn("a", [...])</code></td><td><code>a not in (...)</code></td></tr>
+    <tr><td><code>whereNull("a")</code> / <code>whereNotNull("a")</code></td><td><code>a is [not] null</code></td></tr>
+    <tr><td><code>whereBetween("a", [1, 9])</code></td><td><code>a between ? and ?</code></td></tr>
+    <tr><td><code>whereColumn("a", "&gt;", "b")</code></td><td><code>a &gt; b</code> (sans valeur)</td></tr>
+    <tr><td><code>whereRaw("len(x) &gt; ?", [3])</code></td><td>expression brute</td></tr>
+  </table>
+
+  <h3>Groupes imbriqués (closures)</h3>
+  <p>Passez une closure pour produire un groupe parenthésé.</p>
+  <div class="code-block"><pre><code class="language-typescript">await User.query()
+  .where("active", true)
+  .where((q) =&gt; q.where("role", "admin").orWhere("role", "editor"))
+  .get();
+// ... where active = ? and (role = ? or role = ?)</code></pre></div>
+
+  <h2>Tri, regroupement, limites</h2>
+  <div class="code-block"><pre><code class="language-typescript">User.query()
+  .orderBy("created_at", "desc")
+  .latest()                 // alias de orderBy("created_at", "desc")
+  .groupBy("status")
+  .having("total", "&gt;", 100)
+  .limit(15).offset(30);    // ou .take(15).skip(30)</code></pre></div>
+
+  <h2>Jointures</h2>
+  <div class="code-block"><pre><code class="language-typescript">await User.query()
+  .join("posts", "posts.user_id", "=", "users.id")
+  .leftJoin("profiles", "profiles.user_id", "=", "users.id")
+  .select("users.*")
+  .get();</code></pre></div>
+
+  <h2>Agrégats</h2>
+  <div class="code-block"><pre><code class="language-typescript">await User.query().count();          // number
+await User.query().where("active", true).count();
+await User.query().max("age");
+await User.query().min("age");
+await User.query().sum("votes");
+await User.query().avg("score");
+await User.query().exists();         // boolean</code></pre></div>
+
+  <h2>Récupération</h2>
+  <div class="code-block"><pre><code class="language-typescript">await User.query().get();            // Collection&lt;User&gt;
+await User.query().first();          // User | null
+await User.query().firstOrFail();    // User
+await User.query().value("email");   // valeur d'une colonne du 1er résultat
+await User.query().pluck("name");    // string[]</code></pre></div>
+
+  <h2>Écriture</h2>
+  <div class="code-block"><pre><code class="language-typescript">await User.query().insert({ name: "A" });
+await User.query().insert([{ name: "A" }, { name: "B" }]);  // en masse
+const id = await User.query().insertGetId({ name: "A" });
+await User.query().where("id", 1).update({ name: "X" });
+await User.query().where("spam", true).delete();
+await User.query().where("id", 1).increment("votes", 2);
+await User.query().where("id", 1).decrement("stock");</code></pre></div>
+
+  <h2>selectRaw</h2>
+  <div class="code-block"><pre><code class="language-typescript">await User.query()
+  .select("status")
+  .selectRaw("count(*) as total")
+  .groupBy("status")
+  .get();</code></pre></div>
+
+  <h2>Filtrer par relation (whereHas)</h2>
+  <div class="code-block"><pre><code class="language-typescript">await User.query().has("posts").get();
+await User.query().doesntHave("posts").get();
+await User.query().whereHas("posts", (q) =&gt; q.where("published", true)).get();</code></pre></div>
+
+  <h2>Débogage : voir le SQL</h2>
+  <div class="code-block"><pre><code class="language-typescript">const { sql, bindings } = User.query().where("age", "&gt;", 18).orderBy("name").toSql();
+// SQLite/MySQL : ... where "age" &gt; ? order by "name" asc   bindings: [18]
+// PostgreSQL  : ... where "age" &gt; $1 ...</code></pre></div>
+  <div class="callout">Le query builder produit le bon dialecte automatiquement : quoting des identifiants et placeholders (<code>?</code> vs <code>$1</code>) selon la connexion.</div>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

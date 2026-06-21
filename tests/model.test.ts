@@ -70,10 +70,10 @@ dd("Model — intégration SQLite", () => {
   });
 
   it("create + find + clé auto-incrémentée", async () => {
-    const u = await User.create({ name: "Zoumana", email: "z@africasys.com" });
+    const u = await User.create({ name: "Inoussa ZERBO", email: "z@africasys.com" });
     expect(u.id).toBeGreaterThan(0);
     const found = await User.find(u.id);
-    expect(found?.name).toBe("Zoumana");
+    expect(found?.name).toBe("Inoussa ZERBO");
   });
 
   it("cast boolean et json", async () => {

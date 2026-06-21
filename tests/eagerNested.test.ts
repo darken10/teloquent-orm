@@ -74,7 +74,7 @@ dd("Eager loading imbriqué + withCount", () => {
       t.foreignId("tag_id");
     });
 
-    user = await User.create({ name: "Zoumana" });
+    user = await User.create({ name: "Inoussa ZERBO" });
     p1 = await Post.create({ title: "P1", user_id: user.id });
     p2 = await Post.create({ title: "P2", user_id: user.id });
     await Comment.create({ body: "c1", post_id: p1.id });

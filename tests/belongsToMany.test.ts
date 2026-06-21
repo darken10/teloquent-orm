@@ -70,7 +70,7 @@ dd("belongsToMany (N-N)", () => {
       t.boolean("granted").default(true);
     });
 
-    user = await User.create({ name: "Zoumana" });
+    user = await User.create({ name: "Inoussa ZERBO" });
     admin = await Role.create({ name: "admin" });
     editor = await Role.create({ name: "editor" });
     viewer = await Role.create({ name: "viewer" });

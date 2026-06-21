@@ -75,10 +75,10 @@ describe("Grammar — quoting & placeholders par dialecte", () => {
   it("Postgres utilise $1, $2...", () => {
     const { sql, bindings } = qb(new PostgresGrammar())
       .where("age", ">", 18)
-      .where("name", "Zoumana")
+      .where("name", "Inoussa ZERBO")
       .toSql();
     expect(sql).toBe('select * from "users" where "age" > $1 and "name" = $2');
-    expect(bindings).toEqual([18, "Zoumana"]);
+    expect(bindings).toEqual([18, "Inoussa ZERBO"]);
   });
 });
 

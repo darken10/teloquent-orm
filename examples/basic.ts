@@ -69,11 +69,11 @@ async function main() {
 
   // --- CREATE
   console.log("\n# Création");
-  const zoumana = await User.create({ name: "Zoumana", email: "z@africasys.com" });
+  const inoussa = await User.create({ name: "Inoussa ZERBO", email: "z@africasys.com" });
   const awa = await User.create({ name: "Awa", email: "awa@africasys.com", is_active: false });
 
-  await Post.create({ title: "Premier post", user_id: zoumana.id });
-  await Post.create({ title: "Deuxième post", user_id: zoumana.id });
+  await Post.create({ title: "Premier post", user_id: inoussa.id });
+  await Post.create({ title: "Deuxième post", user_id: inoussa.id });
   await Post.create({ title: "Post de Awa", user_id: awa.id });
 
   // --- READ
@@ -81,8 +81,8 @@ async function main() {
   const all = await User.all();
   console.log(`  Utilisateurs : ${all.pluck("name").join(", ")}`);
 
-  const found = await User.find(zoumana.id);
-  console.log(`  find(${zoumana.id}) -> ${found?.name}`);
+  const found = await User.find(inoussa.id);
+  console.log(`  find(${inoussa.id}) -> ${found?.name}`);
   console.log(`  accessor display_name -> ${(found as any).getAttribute("display_name") ?? (found as any).display_name}`);
 
   const actifs = await User.where("is_active", true).get();
@@ -94,15 +94,15 @@ async function main() {
 
   // --- UPDATE
   console.log("\n# Mise à jour");
-  zoumana.name = "Zoumana TRAORE";
-  console.log(`  isDirty avant save = ${zoumana.isDirty()}`);
-  await zoumana.save();
-  console.log(`  isDirty après save = ${zoumana.isDirty()}`);
+  inoussa.name = "Inoussa ZERBO";
+  console.log(`  isDirty avant save = ${inoussa.isDirty()}`);
+  await inoussa.save();
+  console.log(`  isDirty après save = ${inoussa.isDirty()}`);
 
   // --- RELATIONS (lazy)
   console.log("\n# Relations (lazy)");
-  const posts = (await zoumana.posts().getResults()) as Collection<Post>;
-  console.log(`  posts de Zoumana : ${posts.pluck("title").join(", ")}`);
+  const posts = (await inoussa.posts().getResults()) as Collection<Post>;
+  console.log(`  posts de Inoussa ZERBO : ${posts.pluck("title").join(", ")}`);
 
   // --- EAGER LOADING (évite le N+1)
   console.log("\n# Eager loading (with)");

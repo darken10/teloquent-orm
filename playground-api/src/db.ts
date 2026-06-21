@@ -46,11 +46,11 @@ export async function seed(): Promise<void> {
   const { User } = await import("./models/User.js");
   const { Post } = await import("./models/Post.js");
 
-  const zoumana = await User.create({ name: "Zoumana", email: "z@africasys.com" });
+  const inoussa = await User.create({ name: "Inoussa ZERBO", email: "z@africasys.com" });
   const awa = await User.create({ name: "Awa", email: "awa@africasys.com", is_active: false });
 
-  await Post.create({ title: "Bienvenue", body: "Premier article.", user_id: zoumana.id });
-  await Post.create({ title: "Teloquent", body: "Un ORM maison.", user_id: zoumana.id });
+  await Post.create({ title: "Bienvenue", body: "Premier article.", user_id: inoussa.id });
+  await Post.create({ title: "Teloquent", body: "Un ORM maison.", user_id: inoussa.id });
   await Post.create({ title: "Notes", body: "Article d'Awa.", user_id: awa.id });
 
   console.log("✓ Seed terminé");

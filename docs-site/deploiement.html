@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Déployer la doc — Teloquent</title>
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <h1 class="page-title">Déployer cette documentation</h1>
+  <p class="page-intro">Ce site est entièrement statique (HTML/CSS/JS), sans étape de build. Déployez le dossier <code>docs-site/</code> sur n'importe quel hébergement statique.</p>
+
+  <h2>Structure</h2>
+  <div class="code-block"><pre><code class="language-bash">docs-site/
+├── index.html            # accueil
+├── installation.html
+├── connexions.html
+├── ... (une page par rubrique)
+└── assets/
+    ├── styles.css        # thème clair/sombre
+    └── app.js            # header, sidebar, recherche, TOC, copy…</code></pre></div>
+
+  <h2>Aperçu local</h2>
+  <div class="code-block"><pre><code class="language-bash">npx serve docs-site
+# ou
+python3 -m http.server -d docs-site 8080</code></pre></div>
+
+  <h2>GitHub Pages</h2>
+  <div class="code-block"><pre><code class="language-bash"># Publier le dossier docs-site sur la branche gh-pages
+npx gh-pages -d docs-site
+# puis : Settings → Pages → Source = branche gh-pages</code></pre></div>
+  <p>Alternative via Actions :</p>
+  <span class="filename">.github/workflows/docs.yml</span>
+  <div class="code-block"><pre><code class="language-yaml">name: Deploy docs
+on: { push: { branches: [main] } }
+permissions: { pages: write, id-token: write }
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: { name: github-pages }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: docs-site }
+      - uses: actions/deploy-pages@v4</code></pre></div>
+
+  <h2>Netlify</h2>
+  <div class="code-block"><pre><code class="language-bash">netlify deploy --dir=docs-site --prod
+# ou via l'UI : "Publish directory" = docs-site, aucun build command</code></pre></div>
+
+  <h2>Vercel</h2>
+  <div class="code-block"><pre><code class="language-bash"># Framework Preset: Other — Output Directory: docs-site — Build Command: (vide)
+vercel --prod</code></pre></div>
+
+  <h2>Fonctionnement 100 % hors-ligne</h2>
+  <p>La coloration syntaxique charge highlight.js via CDN. Pour un site sans dépendance externe, téléchargez <code>highlight.min.js</code>, le langage TypeScript et un thème CSS dans <code>assets/</code>, puis remplacez les URL CDN dans <code>assets/app.js</code> par des chemins locaux. Tout le reste (navigation, recherche, thème, TOC) fonctionne déjà sans réseau.</p>
+
+  <div class="callout tip">Le site n'a besoin d'aucun serveur ni base de données : c'est une documentation statique. Hébergez-la gratuitement sur GitHub Pages, Netlify, Vercel, Cloudflare Pages…</div>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

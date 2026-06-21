@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Helpers CRUD — Teloquent</title>
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <h1 class="page-title">Helpers CRUD</h1>
+  <p class="page-intro">Des raccourcis Eloquent fréquents : trouver-ou-créer, mettre-à-jour-ou-créer, upsert en masse et incrémentation.</p>
+
+  <h2>firstOrNew</h2>
+  <p>Cherche le 1<sup>er</sup> enregistrement correspondant aux attributs ; sinon retourne une <strong>instance non sauvegardée</strong>.</p>
+  <div class="code-block"><pre><code class="language-typescript">const user = await User.firstOrNew(
+  { email: "z@a.com" },   // critères de recherche
+  { name: "Inoussa ZERBO" }     // valeurs additionnelles si création
+);
+user.$exists; // false si nouveau
+await user.save();</code></pre></div>
+
+  <h2>firstOrCreate</h2>
+  <p>Comme <code>firstOrNew</code>, mais persiste immédiatement si absent.</p>
+  <div class="code-block"><pre><code class="language-typescript">const user = await User.firstOrCreate(
+  { email: "z@a.com" },
+  { name: "Inoussa ZERBO" }
+);
+// Trouvé -> renvoyé tel quel ; absent -> créé. Pas de doublon.</code></pre></div>
+
+  <h2>updateOrCreate</h2>
+  <p>Met à jour l'enregistrement correspondant, ou le crée.</p>
+  <div class="code-block"><pre><code class="language-typescript">const setting = await Setting.updateOrCreate(
+  { key: "theme" },        // recherche
+  { value: "dark" }        // valeurs à écrire
+);</code></pre></div>
+
+  <h2>upsert (en masse)</h2>
+  <p>Insère plusieurs lignes, ou les met à jour en cas de conflit sur les colonnes uniques. Génère le bon SQL par dialecte (<code>ON CONFLICT</code> pour SQLite/PostgreSQL, <code>ON DUPLICATE KEY UPDATE</code> pour MySQL).</p>
+  <div class="code-block"><pre><code class="language-typescript">await User.upsert(
+  [
+    { email: "a@b.com", name: "A", votes: 1 },
+    { email: "c@d.com", name: "C", votes: 5 },
+  ],
+  ["email"],          // colonne(s) de conflit (clé unique)
+  ["name", "votes"]   // colonnes à mettre à jour si conflit
+);</code></pre></div>
+  <div class="callout">La colonne de conflit doit posséder une contrainte <code>unique</code> (ou être clé primaire) dans le schéma.</div>
+
+  <h2>increment / decrement</h2>
+  <p>Modifie une colonne numérique directement en base (et localement sur l'instance).</p>
+  <div class="code-block"><pre><code class="language-typescript">// Sur une instance
+await user.increment("votes");       // +1
+await user.increment("votes", 5);    // +5
+await user.decrement("credits", 2);  // -2
+user.votes;                          // mis à jour localement
+
+// En masse
+await User.query().where("active", true).increment("votes", 10);</code></pre></div>
+  <div class="callout tip">En masse sur un modèle avec timestamps, <code>increment</code>/<code>decrement</code> mettent aussi à jour <code>updated_at</code>.</div>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

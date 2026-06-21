@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Événements — Teloquent</title>
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <h1 class="page-title">Événements</h1>
+  <p class="page-intro">Réagissez au cycle de vie des modèles (création, mise à jour, suppression) via des observers, façon « model events » d'Eloquent.</p>
+
+  <h2>S'abonner</h2>
+  <div class="code-block"><pre><code class="language-typescript">import { ModelEvents } from "teloquent";
+
+ModelEvents.on(User, "creating", (user) =&gt; {
+  user.email = String(user.email).toLowerCase();
+});
+
+ModelEvents.on(User, "created", (user) =&gt; {
+  console.log("Nouvel utilisateur :", user.getKey());
+});
+
+ModelEvents.on(User, "deleted", async (user) =&gt; {
+  await AuditLog.create({ action: "user.deleted", target: user.getKey() });
+});</code></pre></div>
+
+  <h2>Événements disponibles</h2>
+  <table>
+    <tr><th>Événement</th><th>Déclenché…</th></tr>
+    <tr><td><code>creating</code></td><td>avant l'INSERT</td></tr>
+    <tr><td><code>created</code></td><td>après l'INSERT</td></tr>
+    <tr><td><code>updating</code></td><td>avant l'UPDATE</td></tr>
+    <tr><td><code>updated</code></td><td>après l'UPDATE</td></tr>
+    <tr><td><code>deleting</code></td><td>avant la suppression (ou soft delete)</td></tr>
+    <tr><td><code>deleted</code></td><td>après la suppression</td></tr>
+  </table>
+
+  <h2>Callbacks asynchrones</h2>
+  <p>Les callbacks peuvent être <code>async</code> : ils sont attendus avant que l'opération se poursuive.</p>
+  <div class="code-block"><pre><code class="language-typescript">ModelEvents.on(Order, "creating", async (order) =&gt; {
+  order.reference = await generateUniqueRef();
+});</code></pre></div>
+
+  <h2>Cas d'usage fréquents</h2>
+  <ul>
+    <li><strong>Normalisation</strong> : forcer un email/slug en minuscules à la création.</li>
+    <li><strong>Valeurs dérivées</strong> : générer une référence, un UUID, un slug.</li>
+    <li><strong>Audit / journalisation</strong> : tracer les suppressions et modifications.</li>
+    <li><strong>Invalidation de cache</strong> après <code>updated</code>/<code>deleted</code>.</li>
+  </ul>
+  <div class="callout">Les événements sont liés à la classe : un observer sur une classe ne se déclenche que pour les instances de cette classe.</div>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

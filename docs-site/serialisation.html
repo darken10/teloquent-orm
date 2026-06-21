@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sérialisation — Teloquent</title>
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <h1 class="page-title">Sérialisation</h1>
+  <p class="page-intro">Contrôlez ce qui apparaît dans <code>toJSON()</code> / <code>toObject()</code> : masquez les champs sensibles, exposez des attributs calculés, ou limitez à une liste blanche.</p>
+
+  <h2>toJSON / toObject</h2>
+  <div class="code-block"><pre><code class="language-typescript">const user = await User.find(1);
+user.toJSON();    // applique casts, hidden/visible, appends
+JSON.stringify(user); // utilise toJSON automatiquement</code></pre></div>
+
+  <h2>hidden : masquer des champs</h2>
+  <div class="code-block"><pre><code class="language-typescript">class User extends Model {
+  static hidden = ["password", "remember_token"];
+  declare password: string;
+}
+
+(await User.find(1)).toJSON();
+// { id, name, email, ... } — sans password ni remember_token</code></pre></div>
+  <div class="callout warn">Indispensable pour une API : sans <code>hidden</code>, <code>toJSON()</code> exposerait toutes les colonnes, y compris les mots de passe.</div>
+
+  <h2>visible : liste blanche</h2>
+  <p>Si <code>visible</code> est non vide, <strong>seuls</strong> ces attributs sont sérialisés.</p>
+  <div class="code-block"><pre><code class="language-typescript">class Token extends Model {
+  static visible = ["id", "value"];
+}
+// toJSON() ne renverra que { id, value }</code></pre></div>
+
+  <h2>appends : attributs calculés</h2>
+  <p>Ajoute des accessors (sans colonne en base) à la sortie JSON.</p>
+  <div class="code-block"><pre><code class="language-typescript">class User extends Model {
+  static appends = ["display_name"];
+  getDisplayNameAttribute() {
+    return `★ ${this.getAttribute("name")}`;
+  }
+}
+
+(await User.find(1)).toJSON();
+// { id, name, ..., display_name: "★ Inoussa ZERBO" }</code></pre></div>
+
+  <h2>Surcharges par instance</h2>
+  <div class="code-block"><pre><code class="language-typescript">user.makeVisible("password").toJSON(); // force l'affichage (cette instance)
+user.makeHidden("email").toJSON();     // masque en plus (cette instance)
+user.append("score").toJSON();         // ajoute un accessor (cette instance)</code></pre></div>
+  <p>Ces méthodes renvoient l'instance (chaînables) et n'affectent pas les autres.</p>
+
+  <h2>Relations & collections</h2>
+  <p>Les relations chargées sont sérialisées automatiquement, et le filtrage <code>hidden</code>/<code>visible</code> s'y applique aussi (une relation peut être masquée par son nom).</p>
+  <div class="code-block"><pre><code class="language-typescript">const users = await User.with("posts").get();
+users.toJSON();
+// [ { id, name, posts: [ { id, title, ... } ] }, ... ]
+
+class Account extends Model {
+  static hidden = ["secrets"]; // masque la relation "secrets"
+}</code></pre></div>
+
+  <h2>Récapitulatif</h2>
+  <table>
+    <tr><th>Outil</th><th>Effet</th></tr>
+    <tr><td><code>static hidden</code></td><td>Retire des attributs de la sortie</td></tr>
+    <tr><td><code>static visible</code></td><td>Liste blanche stricte (si non vide)</td></tr>
+    <tr><td><code>static appends</code></td><td>Ajoute des attributs calculés (accessors)</td></tr>
+    <tr><td><code>makeHidden / makeVisible / append</code></td><td>Surcharges par instance</td></tr>
+  </table>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

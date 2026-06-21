@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Migrations — Teloquent</title>
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <h1 class="page-title">Migrations</h1>
+  <p class="page-intro">Le <code>Migrator</code> applique et annule des changements de schéma de façon versionnée, via une table <code>migrations</code> (name, batch).</p>
+
+  <h2>Définir des migrations</h2>
+  <p>Une migration est un objet avec un <code>name</code> unique et des fonctions <code>up</code>/<code>down</code>.</p>
+  <div class="code-block"><pre><code class="language-typescript">import { Schema, type MigrationEntry } from "teloquent";
+
+export const migrations: MigrationEntry[] = [
+  {
+    name: "001_create_users",
+    up:   () =&gt; Schema().create("users", (t) =&gt; {
+      t.increments("id");
+      t.string("name");
+      t.timestamps();
+    }),
+    down: () =&gt; Schema().dropIfExists("users"),
+  },
+  {
+    name: "002_add_email_to_users",
+    up:   () =&gt; Schema().table("users", (t) =&gt; { t.string("email").nullable(); }),
+    down: () =&gt; Schema().table("users", (t) =&gt; { t.dropColumn("email"); }),
+  },
+];</code></pre></div>
+  <div class="callout tip">Préfixez les noms par un numéro/horodatage (<code>001_</code>, <code>20260621_</code>) : l'ordre du tableau définit l'ordre d'exécution.</div>
+
+  <h2>Exécuter</h2>
+  <div class="code-block"><pre><code class="language-typescript">import { Migrator } from "teloquent";
+import { migrations } from "./migrations.js";
+
+const m = new Migrator();
+
+await m.run(migrations);      // applique les migrations en attente (nouveau batch)
+await m.rollback(migrations); // annule le dernier batch
+await m.reset(migrations);    // annule toutes les migrations
+await m.refresh(migrations);  // reset + run (recrée tout)
+await m.status(migrations);   // [{ name, ran, batch }]</code></pre></div>
+
+  <h2>Comportement</h2>
+  <ul>
+    <li><strong>Idempotent</strong> : <code>run</code> n'applique que les migrations non encore exécutées.</li>
+    <li><strong>Batches</strong> : chaque <code>run</code> crée un nouveau numéro de batch.</li>
+    <li><strong>Rollback ciblé</strong> : <code>rollback</code> n'annule que le dernier batch (dans l'ordre inverse).</li>
+    <li>La table <code>migrations</code> est créée automatiquement si absente.</li>
+  </ul>
+
+  <h2>Statut</h2>
+  <div class="code-block"><pre><code class="language-typescript">const status = await m.status(migrations);
+// [
+//   { name: "001_create_users",        ran: true,  batch: 1 },
+//   { name: "002_add_email_to_users",  ran: false, batch: null },
+// ]</code></pre></div>
+
+  <h2>Script CLI maison</h2>
+  <p>Teloquent fournit la mécanique ; vous l'exposez comme vous le souhaitez (ex. via npm scripts).</p>
+  <span class="filename">migrate.ts</span>
+  <div class="code-block"><pre><code class="language-typescript">import { ConnectionManager, Migrator } from "teloquent";
+import { migrations } from "./migrations.js";
+
+await ConnectionManager.addConnection({ driver: "sqlite", database: "app.sqlite" });
+const m = new Migrator();
+
+const cmd = process.argv[2] ?? "run";
+if (cmd === "run")      console.log("appliquées :", await m.run(migrations));
+if (cmd === "rollback") console.log("annulées :", await m.rollback(migrations));
+if (cmd === "refresh")  await m.refresh(migrations);
+if (cmd === "status")   console.table(await m.status(migrations));
+
+await ConnectionManager.closeAll();</code></pre></div>
+  <div class="code-block"><pre><code class="language-bash">tsx migrate.ts run
+tsx migrate.ts rollback
+tsx migrate.ts status</code></pre></div>
+
+  <h2>Classe Migration (alternative)</h2>
+  <div class="code-block"><pre><code class="language-typescript">import { Migration } from "teloquent";
+
+class CreateUsers extends Migration {
+  async up()   { await this.schema.create("users", (t) =&gt; { t.increments("id"); }); }
+  async down() { await this.schema.dropIfExists("users"); }
+}</code></pre></div>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Collections — Teloquent</title>
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <h1 class="page-title">Collections</h1>
+  <p class="page-intro">Les requêtes de modèles renvoient une <code>Collection</code> : un tableau JavaScript enrichi de méthodes pratiques. Toutes les méthodes natives d'<code>Array</code> restent disponibles.</p>
+
+  <h2>Obtenir une collection</h2>
+  <div class="code-block"><pre><code class="language-typescript">const users = await User.all();              // Collection&lt;User&gt;
+const actifs = await User.where("active", true).get();
+
+users.length;          // comme un tableau
+users.map((u) =&gt; u.name);
+for (const u of users) { /* ... */ }</code></pre></div>
+
+  <h2>Méthodes utilitaires</h2>
+  <table>
+    <tr><th>Méthode</th><th>Description</th></tr>
+    <tr><td><code>first()</code></td><td>Premier élément ou <code>null</code></td></tr>
+    <tr><td><code>last()</code></td><td>Dernier élément ou <code>null</code></td></tr>
+    <tr><td><code>isEmpty()</code></td><td><code>true</code> si vide</td></tr>
+    <tr><td><code>pluck(key)</code></td><td>Extrait une colonne en tableau</td></tr>
+    <tr><td><code>keyBy(key)</code></td><td><code>Map</code> indexée par une clé</td></tr>
+    <tr><td><code>groupBy(key)</code></td><td><code>Map</code> de groupes</td></tr>
+    <tr><td><code>toArray()</code></td><td>Tableau simple</td></tr>
+    <tr><td><code>toJSON()</code></td><td>Sérialise chaque élément</td></tr>
+  </table>
+
+  <h2>Exemples</h2>
+  <div class="code-block"><pre><code class="language-typescript">const users = await User.all();
+
+users.first();                 // User | null
+users.isEmpty();               // false
+
+users.pluck("email");          // ["a@b.com", "c@d.com", ...]
+
+const byId = users.keyBy("id"); // Map&lt;number, User&gt;
+byId.get(1);                    // User #1
+
+const byRole = users.groupBy("role"); // Map&lt;string, User[]&gt;
+byRole.get("admin")?.length;
+
+users.toJSON();                // applique hidden/visible/appends sur chaque modèle</code></pre></div>
+
+  <h2>Chaînage avec Array</h2>
+  <div class="code-block"><pre><code class="language-typescript">const noms = (await User.where("active", true).get())
+  .filter((u) =&gt; u.getAttribute("age") &gt;= 18)
+  .map((u) =&gt; u.name)
+  .sort();</code></pre></div>
+
+  <h2>Construire une collection</h2>
+  <div class="code-block"><pre><code class="language-typescript">import { Collection } from "teloquent";
+
+const c = Collection.fromArray([{ id: 1 }, { id: 2 }]);
+c.pluck("id"); // [1, 2]</code></pre></div>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

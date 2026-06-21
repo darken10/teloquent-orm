@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relations — Teloquent</title>
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <h1 class="page-title">Relations</h1>
+  <p class="page-intro">Comme Eloquent, une relation est une <strong>méthode</strong> du modèle qui retourne un objet relation. Teloquent gère hasOne, hasMany, belongsTo et belongsToMany.</p>
+
+  <h2>Vue d'ensemble</h2>
+  <table>
+    <tr><th>Relation</th><th>Type</th><th>Exemple</th></tr>
+    <tr><td><code>hasOne</code></td><td>1-1</td><td>un User a un Profile</td></tr>
+    <tr><td><code>hasMany</code></td><td>1-N</td><td>un User a plusieurs Post</td></tr>
+    <tr><td><code>belongsTo</code></td><td>N-1 (inverse)</td><td>un Post appartient à un User</td></tr>
+    <tr><td><code>belongsToMany</code></td><td>N-N</td><td>un User a plusieurs Role (table pivot)</td></tr>
+  </table>
+
+  <h2>Définition</h2>
+  <div class="code-block"><pre><code class="language-typescript">class User extends Model {
+  posts()   { return this.hasMany(Post); }
+  profile() { return this.hasOne(Profile); }
+  roles()   { return this.belongsToMany(Role); }
+}
+
+class Post extends Model {
+  author()  { return this.belongsTo(User, "user_id"); }
+}</code></pre></div>
+
+  <h3>Clés personnalisées</h3>
+  <div class="code-block"><pre><code class="language-typescript">// hasMany(related, foreignKey?, localKey?)
+this.hasMany(Post, "author_id", "id");
+
+// belongsTo(related, foreignKey?, ownerKey?)
+this.belongsTo(User, "author_id", "id");
+
+// belongsToMany(related, pivotTable?, foreignPivotKey?, relatedPivotKey?, parentKey?, relatedKey?)
+this.belongsToMany(Role, "role_user", "user_id", "role_id");</code></pre></div>
+  <div class="callout">Conventions par défaut : clé étrangère = <code>&lt;modèle&gt;_id</code> ; table pivot = noms des deux modèles au singulier, snake_case, triés alphabétiquement et joints par <code>_</code> (ex. <code>role_user</code>).</div>
+
+  <h2>Charger une relation</h2>
+  <div class="code-block"><pre><code class="language-typescript">const user = await User.find(1);
+
+// Lazy : exécute la requête maintenant
+const posts = await user.posts().getResults();   // Collection&lt;Post&gt;
+const profile = await user.profile().getResults(); // Profile | null
+
+// Requête chaînée sur la relation
+const recents = await user.posts().where("published", true).orderBy("created_at", "desc").get();</code></pre></div>
+
+  <h3>Accès après eager loading</h3>
+  <div class="code-block"><pre><code class="language-typescript">const users = await User.with("posts").get();
+for (const u of users) {
+  u.relationLoaded("posts");        // true
+  const posts = u.getRelation("posts"); // Collection&lt;Post&gt;
+}</code></pre></div>
+  <div class="callout warn">En TypeScript, <code>user.posts</code> est une <em>méthode</em> (la requête). Pour lire la relation chargée, utilisez <code>user.getRelation("posts")</code> — pas <code>user.posts</code>.</div>
+
+  <h2>belongsToMany & table pivot</h2>
+  <div class="code-block"><pre><code class="language-typescript">// Attacher / détacher / synchroniser
+await user.roles().attach(adminId);
+await user.roles().attach([adminId, editorId]);
+await user.roles().attach(editorId, { granted: true }); // colonnes pivot supplémentaires
+await user.roles().detach(adminId);     // détache un rôle
+await user.roles().detach();            // détache tout
+await user.roles().sync([viewerId, adminId]); // l'ensemble final = exactement ces ids
+
+// Lire
+const roles = await user.roles().getResults();
+await user.roles().where("name", "admin").get();</code></pre></div>
+
+  <h2>Charger paresseusement après coup</h2>
+  <div class="code-block"><pre><code class="language-typescript">const user = await User.find(1);
+await user.load("posts");
+user.getRelation("posts");</code></pre></div>
+
+  <h2>Filtrer par existence d'une relation</h2>
+  <div class="code-block"><pre><code class="language-typescript">await User.query().has("posts").get();          // a au moins un post
+await User.query().doesntHave("posts").get();   // n'a aucun post
+await User.query().whereHas("posts", (q) =&gt; q.where("published", true)).get();
+await User.query().orWhereHas("comments").get();</code></pre></div>
+  <p>Fonctionne aussi sur les relations N-N :</p>
+  <div class="code-block"><pre><code class="language-typescript">await Post.query().whereHas("tags", (q) =&gt; q.where("name", "typescript")).get();</code></pre></div>
+
+  <h2>Aller plus loin</h2>
+  <p>Pour charger plusieurs niveaux (<code>with("posts.comments")</code>) et compter sans charger (<code>withCount</code>), voir <a href="eager-loading.html">Eager loading &amp; withCount</a>.</p>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

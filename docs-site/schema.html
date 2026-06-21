@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schéma — Teloquent</title>
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <h1 class="page-title">Schéma</h1>
+  <p class="page-intro">Le constructeur de schéma (<code>Schema</code> + <code>Blueprint</code>) crée et modifie les tables de façon portable entre SQLite, MySQL et PostgreSQL.</p>
+
+  <h2>Créer une table</h2>
+  <div class="code-block"><pre><code class="language-typescript">import { Schema } from "teloquent";
+
+await Schema().create("users", (t) =&gt; {
+  t.increments("id");
+  t.string("name");
+  t.string("email").unique();
+  t.boolean("is_active").default(true);
+  t.integer("votes").default(0);
+  t.text("bio").nullable();
+  t.json("meta");
+  t.foreignId("team_id");
+  t.timestamps();      // created_at + updated_at
+  t.softDeletes();     // deleted_at
+});</code></pre></div>
+
+  <h2>Types de colonnes</h2>
+  <table>
+    <tr><th>Méthode</th><th>SQLite</th><th>MySQL</th><th>PostgreSQL</th></tr>
+    <tr><td><code>increments("id")</code></td><td>integer PK autoincrement</td><td>int auto_increment PK</td><td>serial PK</td></tr>
+    <tr><td><code>integer</code> / <code>bigInteger</code></td><td>integer</td><td>int / bigint</td><td>integer / bigint</td></tr>
+    <tr><td><code>string</code></td><td>varchar</td><td>varchar(255)</td><td>varchar(255)</td></tr>
+    <tr><td><code>text</code></td><td>text</td><td>text</td><td>text</td></tr>
+    <tr><td><code>boolean</code></td><td>integer</td><td>tinyint(1)</td><td>boolean</td></tr>
+    <tr><td><code>float</code> / <code>decimal</code></td><td>real / numeric</td><td>float / decimal</td><td>real / numeric</td></tr>
+    <tr><td><code>date</code> / <code>datetime</code> / <code>timestamp</code></td><td>date / datetime</td><td>date / datetime / timestamp</td><td>date / timestamp</td></tr>
+    <tr><td><code>json</code></td><td>text</td><td>json</td><td>jsonb</td></tr>
+    <tr><td><code>foreignId</code></td><td>integer</td><td>bigint</td><td>bigint</td></tr>
+  </table>
+
+  <h2>Modificateurs</h2>
+  <div class="code-block"><pre><code class="language-typescript">t.string("email").unique();
+t.text("bio").nullable();
+t.integer("votes").default(0);
+t.boolean("is_active").default(true);</code></pre></div>
+  <table>
+    <tr><th>Modificateur</th><th>Effet</th></tr>
+    <tr><td><code>.nullable()</code></td><td>Autorise NULL</td></tr>
+    <tr><td><code>.unique()</code></td><td>Contrainte d'unicité</td></tr>
+    <tr><td><code>.default(v)</code></td><td>Valeur par défaut</td></tr>
+  </table>
+
+  <h2>Modifier une table (ALTER)</h2>
+  <div class="code-block"><pre><code class="language-typescript">await Schema().table("users", (t) =&gt; {
+  t.string("phone").nullable();   // ADD COLUMN
+  t.dropColumn("bio");            // DROP COLUMN
+});</code></pre></div>
+
+  <h2>Supprimer / vérifier</h2>
+  <div class="code-block"><pre><code class="language-typescript">await Schema().dropIfExists("users");
+await Schema().drop("users");
+await Schema().hasTable("users"); // boolean</code></pre></div>
+
+  <h2>Connexion ciblée</h2>
+  <div class="code-block"><pre><code class="language-typescript">await Schema("reporting").create("metrics", (t) =&gt; {
+  t.increments("id");
+  t.string("key");
+});</code></pre></div>
+  <div class="callout">Pour organiser et versionner les changements de schéma, utilisez le <a href="migrations.html">runner de migrations</a>.</div>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

@@ -28,19 +28,19 @@ class Post extends Model {
 }
 
 function user() {
-  return new User({ name: "Zoumana", email: "z@a.com", password: "secret" });
+  return new User({ name: "Inoussa ZERBO", email: "z@a.com", password: "secret" });
 }
 
 describe("Sérialisation", () => {
   it("hidden masque les champs sensibles", () => {
     const j = user().toJSON();
     expect(j.password).toBeUndefined();
-    expect(j.name).toBe("Zoumana");
+    expect(j.name).toBe("Inoussa ZERBO");
     expect(j.email).toBe("z@a.com");
   });
 
   it("appends ajoute les attributs calculés (accessor)", () => {
-    expect(user().toJSON().display_name).toBe("★ Zoumana");
+    expect(user().toJSON().display_name).toBe("★ Inoussa ZERBO");
   });
 
   it("makeVisible force l'affichage d'un champ masqué (instance)", () => {
@@ -53,7 +53,7 @@ describe("Sérialisation", () => {
   it("makeHidden masque un champ pour l'instance", () => {
     const j = user().makeHidden("email").toJSON();
     expect(j.email).toBeUndefined();
-    expect(j.name).toBe("Zoumana");
+    expect(j.name).toBe("Inoussa ZERBO");
   });
 
   it("append ajoute un attribut calculé à l'instance", () => {

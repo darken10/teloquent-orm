@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Définir un modèle — Teloquent</title>
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <h1 class="page-title">Définir un modèle</h1>
+  <p class="page-intro">Un modèle Teloquent est une classe qui étend <code>Model</code>. Comme Eloquent, il est « schemaless » : on déclare les propriétés pour le typage, les attributs sont stockés dynamiquement.</p>
+
+  <h2>Modèle minimal</h2>
+  <div class="code-block"><pre><code class="language-typescript">import { Model } from "teloquent";
+
+class User extends Model {
+  declare id: number;
+  declare name: string;
+  declare email: string;
+}</code></pre></div>
+  <div class="callout"><strong>Le mot-clé <code>declare</code></strong> indique à TypeScript le type d'un attribut sans générer de champ réel. C'est ce qui permet au <code>Proxy</code> interne d'intercepter <code>user.name</code> et <code>user.name = …</code>.</div>
+
+  <h2>Configuration</h2>
+  <p>Toutes ces propriétés statiques sont optionnelles.</p>
+  <div class="code-block"><pre><code class="language-typescript">class User extends Model {
+  static table = "users";          // déduit sinon : "User" -> "users"
+  static primaryKey = "id";        // clé primaire
+  static incrementing = true;      // clé auto-incrémentée
+  static timestamps = true;        // created_at / updated_at automatiques
+  static connectionName = "default";
+  static fillable = ["name", "email"]; // assignables en masse
+  static guarded = ["id"];             // ou : protégés (si fillable vide)
+  static casts = { is_active: "boolean", meta: "json" };
+}</code></pre></div>
+
+  <h3>Conventions de nommage</h3>
+  <table>
+    <tr><th>Élément</th><th>Convention</th><th>Exemple</th></tr>
+    <tr><td>Table</td><td>pluriel snake_case du nom de classe</td><td><code>BlogPost → blog_posts</code></td></tr>
+    <tr><td>Clé primaire</td><td><code>id</code></td><td>—</td></tr>
+    <tr><td>Clé étrangère</td><td><code>&lt;modèle&gt;_id</code></td><td><code>User → user_id</code></td></tr>
+    <tr><td>Timestamps</td><td><code>created_at</code>, <code>updated_at</code></td><td>—</td></tr>
+  </table>
+
+  <h2>Casts (conversion de types)</h2>
+  <p>Les casts convertissent automatiquement les attributs à la lecture et sérialisent à l'écriture.</p>
+  <table>
+    <tr><th>Cast</th><th>Lecture renvoie</th></tr>
+    <tr><td><code>int</code>, <code>float</code></td><td><code>number</code></td></tr>
+    <tr><td><code>boolean</code></td><td><code>boolean</code> (0/1 → false/true)</td></tr>
+    <tr><td><code>string</code></td><td><code>string</code></td></tr>
+    <tr><td><code>json</code></td><td>objet/array (parse) ; stocké en chaîne JSON</td></tr>
+    <tr><td><code>date</code>, <code>datetime</code></td><td><code>Date</code></td></tr>
+  </table>
+  <div class="code-block"><pre><code class="language-typescript">class User extends Model {
+  static casts = { is_active: "boolean", meta: "json" };
+  declare is_active: boolean;
+  declare meta: { theme: string } | null;
+}
+
+const u = await User.create({ is_active: true, meta: { theme: "dark" } });
+u.is_active;   // true (boolean)
+u.meta.theme;  // "dark" (objet)</code></pre></div>
+
+  <h2>Accessors & Mutators</h2>
+  <p>Un <strong>accessor</strong> calcule une valeur dérivée ; un <strong>mutator</strong> transforme une valeur avant stockage. Conventions : <code>getXxxAttribute()</code> et <code>setXxxAttribute()</code>.</p>
+  <div class="code-block"><pre><code class="language-typescript">class User extends Model {
+  declare first_name: string;
+  declare last_name: string;
+
+  // Accessor : user.full_name
+  getFullNameAttribute(): string {
+    return `${this.getAttribute("first_name")} ${this.getAttribute("last_name")}`;
+  }
+
+  // Mutator : normalise l'email en minuscules
+  setEmailAttribute(value: string) {
+    return value.toLowerCase();
+  }
+}
+
+const u = new User({ first_name: "Inoussa ZERBO", last_name: "Traoré" });
+u.full_name; // "Inoussa ZERBO Traoré"</code></pre></div>
+  <div class="callout tip">Les accessors « purs » (sans colonne en base) doivent être ajoutés à <code>static appends</code> pour apparaître dans <code>toJSON()</code>. Voir <a href="serialisation.html">Sérialisation</a>.</div>
+
+  <h2>Mass assignment</h2>
+  <p>Pour se protéger des assignations massives non désirées, seules les colonnes <code>fillable</code> sont remplies par <code>create()</code>/<code>fill()</code>. Si <code>fillable</code> est vide, c'est <code>guarded</code> qui s'applique (liste noire).</p>
+  <div class="code-block"><pre><code class="language-typescript">class User extends Model {
+  static fillable = ["name", "email"];
+}
+
+User.create({ name: "A", email: "a@b.com", is_admin: true });
+// is_admin est ignoré (non fillable)
+
+// Forcer (contourne fillable)
+const u = new User();
+u.forceFill({ is_admin: true });</code></pre></div>
+
+  <h2>Décorateurs (optionnels)</h2>
+  <p>Sucre syntaxique équivalent aux propriétés statiques.</p>
+  <div class="code-block"><pre><code class="language-typescript">import { Model, table, casts } from "teloquent";
+
+@table("users")
+@casts({ is_active: "boolean" })
+class User extends Model {
+  declare name: string;
+}</code></pre></div>
+
+  <h2>Dirty tracking</h2>
+  <p>Teloquent suit les attributs modifiés depuis le dernier chargement/sauvegarde : <code>save()</code> n'émet un <code>UPDATE</code> que sur les colonnes réellement changées.</p>
+  <div class="code-block"><pre><code class="language-typescript">const u = await User.find(1);
+u.isDirty();        // false
+u.name = "Nouveau";
+u.isDirty();        // true
+u.getDirty();       // { name: "Nouveau" }
+await u.save();     // UPDATE users SET name = ? WHERE id = ?
+u.isDirty();        // false</code></pre></div>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teloquent — Documentation</title>
+<meta name="description" content="Documentation de Teloquent, un ORM TypeScript Active Record inspiré de Laravel Eloquent.">
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <div class="hero">
+    <h1>Teloquent</h1>
+    <p>Un ORM <strong>TypeScript</strong> Active Record inspiré de <strong>Laravel Eloquent</strong>, avec un typage fort et le support de SQLite, MySQL et PostgreSQL.</p>
+    <div class="badges">
+      <span class="badge">TypeScript</span>
+      <span class="badge">ESM · Node ≥ 18</span>
+      <span class="badge ok">SQLite</span>
+      <span class="badge ok">MySQL</span>
+      <span class="badge ok">PostgreSQL</span>
+      <span class="badge">Licence MIT</span>
+    </div>
+  </div>
+
+  <h2>Démarrage rapide</h2>
+  <div class="code-block"><pre><code class="language-typescript">import { Model, ConnectionManager } from "teloquent";
+
+await ConnectionManager.addConnection({ driver: "sqlite", database: "app.sqlite" });
+
+class User extends Model {
+  declare id: number;
+  declare name: string;
+  posts() { return this.hasMany(Post); }
+}
+
+const user = await User.create({ name: "Inoussa ZERBO" });
+const actifs = await User.where("is_active", true).with("posts").get();</code></pre></div>
+
+  <h2>Pourquoi Teloquent</h2>
+  <ul>
+    <li><strong>API quasi identique à Eloquent</strong> : <code>find</code>, <code>where</code>, <code>create</code>, <code>save</code>, <code>hasMany</code>, <code>with</code>, <code>Schema</code>…</li>
+    <li><strong>Typage fort</strong> : génériques et autocomplétion — l'avantage sur PHP.</li>
+    <li><strong>Multi-SGBD</strong> : une couche <em>Grammar</em> par dialecte ; valeurs toujours liées (anti-injection).</li>
+    <li><strong>Complet</strong> : relations (dont N-N), eager loading imbriqué, soft deletes, scopes, pagination, migrations.</li>
+  </ul>
+
+  <h2>Explorer la documentation</h2>
+  <div class="cards">
+    <a class="card" href="installation.html"><h3>Installation →</h3><p>Mise en place et configuration TypeScript.</p></a>
+    <a class="card" href="modeles.html"><h3>Modèles →</h3><p>Définir des modèles, casts, accessors.</p></a>
+    <a class="card" href="query-builder.html"><h3>Query Builder →</h3><p>Construire des requêtes expressives.</p></a>
+    <a class="card" href="relations.html"><h3>Relations →</h3><p>hasMany, belongsTo, belongsToMany…</p></a>
+    <a class="card" href="eager-loading.html"><h3>Eager loading →</h3><p>with imbriqué & withCount.</p></a>
+    <a class="card" href="migrations.html"><h3>Migrations →</h3><p>Schéma, ALTER, runner de migrations.</p></a>
+  </div>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

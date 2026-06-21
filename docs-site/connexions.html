@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connexions — Teloquent</title>
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <h1 class="page-title">Connexions</h1>
+  <p class="page-intro">Le <code>ConnectionManager</code> est le registre central des connexions. On enregistre une ou plusieurs connexions au démarrage, puis les modèles les utilisent automatiquement.</p>
+
+  <h2>Enregistrer une connexion</h2>
+  <div class="code-block"><pre><code class="language-typescript">import { ConnectionManager } from "teloquent";
+
+// SQLite (fichier ou ":memory:")
+await ConnectionManager.addConnection({ driver: "sqlite", database: "app.sqlite" });</code></pre></div>
+
+  <h2>Options de connexion</h2>
+  <table>
+    <tr><th>Champ</th><th>Type</th><th>Description</th></tr>
+    <tr><td><code>driver</code></td><td><code>"sqlite" | "mysql" | "pgsql"</code></td><td>SGBD cible (obligatoire).</td></tr>
+    <tr><td><code>database</code></td><td><code>string</code></td><td>Fichier SQLite / nom de base.</td></tr>
+    <tr><td><code>host</code></td><td><code>string</code></td><td>Hôte (MySQL/PostgreSQL).</td></tr>
+    <tr><td><code>port</code></td><td><code>number</code></td><td>Port (3306 / 5432 par défaut).</td></tr>
+    <tr><td><code>username</code> / <code>password</code></td><td><code>string</code></td><td>Identifiants.</td></tr>
+    <tr><td><code>options</code></td><td><code>object</code></td><td>Options propres au driver sous-jacent.</td></tr>
+  </table>
+
+  <h2>PostgreSQL & MySQL</h2>
+  <div class="code-block"><pre><code class="language-typescript">// PostgreSQL
+await ConnectionManager.addConnection({
+  driver: "pgsql",
+  host: "127.0.0.1", port: 5432,
+  username: "user", password: "secret", database: "app",
+});
+
+// MySQL / MariaDB
+await ConnectionManager.addConnection({
+  driver: "mysql",
+  host: "127.0.0.1", port: 3306,
+  username: "root", password: "secret", database: "app",
+});</code></pre></div>
+
+  <h2>Connexions multiples</h2>
+  <p>On peut enregistrer plusieurs connexions nommées et choisir laquelle utiliser.</p>
+  <div class="code-block"><pre><code class="language-typescript">await ConnectionManager.addConnection({ driver: "sqlite", database: "app.sqlite" });          // "default"
+await ConnectionManager.addConnection({ driver: "pgsql", /* ... */ }, "reporting");
+
+ConnectionManager.connection();            // connexion par défaut
+ConnectionManager.connection("reporting"); // connexion nommée
+ConnectionManager.setDefault("reporting"); // change la connexion par défaut</code></pre></div>
+  <p>Pour qu'un modèle utilise une connexion précise :</p>
+  <div class="code-block"><pre><code class="language-typescript">class Report extends Model {
+  static connectionName = "reporting";
+}</code></pre></div>
+
+  <h2>Transactions</h2>
+  <p><code>transaction()</code> exécute un callback : commit si tout réussit, rollback automatique si une exception est levée. Les transactions imbriquées sont gérées (un seul commit/rollback au niveau le plus externe).</p>
+  <div class="code-block"><pre><code class="language-typescript">await ConnectionManager.connection().transaction(async () =&gt; {
+  const user = await User.create({ name: "A" });
+  await Post.create({ title: "Bienvenue", user_id: user.id });
+  // si une erreur survient ici, les deux insertions sont annulées
+});</code></pre></div>
+
+  <h2>Requêtes brutes</h2>
+  <div class="code-block"><pre><code class="language-typescript">const conn = ConnectionManager.connection();
+
+// SELECT
+const rows = await conn.select("select * from users where id = ?", [1]);
+
+// Écriture (INSERT/UPDATE/DELETE/DDL)
+const result = await conn.statement("update users set name = ? where id = ?", ["X", 1]);
+result.affectedRows; // nombre de lignes affectées</code></pre></div>
+
+  <h2>Fermer les connexions</h2>
+  <div class="code-block"><pre><code class="language-typescript">await ConnectionManager.closeAll();</code></pre></div>
+
+  <h2>Connexion personnalisée</h2>
+  <p>Pour un driver maison (ou des tests), on peut enregistrer une <code>Connection</code> déjà construite.</p>
+  <div class="code-block"><pre><code class="language-typescript">import { Connection, ConnectionManager, PostgresGrammar } from "teloquent";
+
+const conn = new Connection(monDriverCustom, new PostgresGrammar());
+ConnectionManager.register(conn, "default");</code></pre></div>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soft deletes — Teloquent</title>
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <h1 class="page-title">Soft deletes</h1>
+  <p class="page-intro">Les soft deletes marquent un enregistrement comme supprimé (colonne <code>deleted_at</code>) au lieu de l'effacer réellement. Les enregistrements supprimés sont alors exclus des requêtes par défaut.</p>
+
+  <h2>Activer</h2>
+  <div class="code-block"><pre><code class="language-typescript">class Post extends Model {
+  static softDeletes = true;
+  static deletedAtColumn = "deleted_at"; // par défaut
+}</code></pre></div>
+  <p>Ajoutez la colonne dans le schéma :</p>
+  <div class="code-block"><pre><code class="language-typescript">await Schema().create("posts", (t) =&gt; {
+  t.increments("id");
+  t.string("title");
+  t.timestamps();
+  t.softDeletes(); // ajoute deleted_at (nullable)
+});</code></pre></div>
+
+  <h2>Supprimer & restaurer</h2>
+  <div class="code-block"><pre><code class="language-typescript">const post = await Post.findOrFail(1);
+
+await post.delete();        // positionne deleted_at (pas de DELETE réel)
+post.trashed();             // true
+
+await post.restore();       // remet deleted_at à null
+post.trashed();             // false
+
+await post.forceDelete();   // suppression définitive (DELETE réel)</code></pre></div>
+
+  <h2>Interroger</h2>
+  <div class="code-block"><pre><code class="language-typescript">await Post.query().get();         // exclut les supprimés (par défaut)
+await Post.find(1);               // ignore les supprimés
+
+await Post.withTrashed().get();   // inclut les supprimés
+await Post.onlyTrashed().get();   // seulement les supprimés
+
+await Post.withTrashed().where("id", 1).first(); // retrouver un supprimé</code></pre></div>
+  <div class="callout">Le filtre <code>deleted_at is null</code> est appliqué automatiquement via un scope interne. <code>withTrashed()</code> le retire, <code>onlyTrashed()</code> l'inverse.</div>
+
+  <h2>Suppression en masse</h2>
+  <div class="code-block"><pre><code class="language-typescript">// Soft delete en masse (UPDATE deleted_at) si le modèle l'active
+await Post.query().where("spam", true).delete();
+
+// Suppression réelle en masse
+await Post.query().where("spam", true).forceDelete();</code></pre></div>
+
+  <h2>Comptage</h2>
+  <div class="code-block"><pre><code class="language-typescript">await Post.query().count();           // hors supprimés
+await Post.withTrashed().count();     // tous
+await Post.onlyTrashed().count();     // supprimés uniquement</code></pre></div>
+
+  <h2>Interaction avec les relations</h2>
+  <p>Les compteurs <code>withCount</code> et les sous-requêtes <code>whereHas</code> respectent les soft deletes du modèle lié : un enfant supprimé n'est pas compté ni considéré comme « existant ».</p>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

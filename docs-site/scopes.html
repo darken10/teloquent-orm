@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scopes — Teloquent</title>
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <h1 class="page-title">Scopes</h1>
+  <p class="page-intro">Les scopes encapsulent des contraintes de requête réutilisables. Teloquent gère les scopes <strong>locaux</strong> (invoqués à la demande) et <strong>globaux</strong> (appliqués automatiquement).</p>
+
+  <h2>Scopes locaux</h2>
+  <p>Définissez une méthode statique <code>scopeXxx(query, ...args)</code>, puis invoquez-la via <code>scope("xxx")</code>.</p>
+  <div class="code-block"><pre><code class="language-typescript">class Post extends Model {
+  static scopePublished(q) {
+    q.where("published", true);
+  }
+  static scopeOfType(q, type: string) {
+    q.where("type", type);
+  }
+}
+
+await Post.scope("published").get();
+await Post.scope("ofType", "article").get();
+
+// Combinable avec le query builder
+await Post.query().scope("published").where("title", "like", "A%").orderBy("created_at").get();</code></pre></div>
+
+  <h2>Scopes globaux</h2>
+  <p>Un scope global s'applique à <em>toutes</em> les requêtes du modèle. Idéal pour le multi-tenant ou un filtre métier permanent.</p>
+  <div class="code-block"><pre><code class="language-typescript">class Tenant extends Model {
+  declare active: boolean;
+}
+
+// À enregistrer une fois (au démarrage)
+Tenant.addGlobalScope("active", (q) =&gt; q.where("active", true));
+
+await Tenant.query().get();   // filtre "active = true" appliqué automatiquement
+await Tenant.all();           // idem
+Tenant.query().toSql().sql;   // ... where "active" = ?</code></pre></div>
+  <div class="callout">Les scopes globaux sont hérités le long de la chaîne de classes : un scope sur une classe de base s'applique aussi à ses sous-classes.</div>
+
+  <h2>Exemple complet : multi-tenant</h2>
+  <div class="code-block"><pre><code class="language-typescript">let currentTenantId = 1;
+
+class Invoice extends Model {
+  declare tenant_id: number;
+}
+Invoice.addGlobalScope("tenant", (q) =&gt; q.where("tenant_id", currentTenantId));
+
+// Toutes les requêtes sont automatiquement filtrées sur le tenant courant
+await Invoice.query().get();
+await Invoice.where("status", "paid").get();</code></pre></div>
+
+  <h2>Soft deletes = un scope global interne</h2>
+  <p>Le filtre <code>deleted_at is null</code> des <a href="soft-deletes.html">soft deletes</a> est implémenté comme un scope appliqué automatiquement, que <code>withTrashed()</code>/<code>onlyTrashed()</code> savent désactiver.</p>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

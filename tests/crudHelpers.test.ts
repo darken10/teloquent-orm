@@ -37,11 +37,11 @@ dd("Helpers CRUD", () => {
   });
 
   it("firstOrCreate : crée puis retrouve sans doublon", async () => {
-    const u1 = await User.firstOrCreate({ email: "z@a.com" }, { name: "Zoumana" });
+    const u1 = await User.firstOrCreate({ email: "z@a.com" }, { name: "Inoussa ZERBO" });
     expect(u1.id).toBeGreaterThan(0);
     const u2 = await User.firstOrCreate({ email: "z@a.com" }, { name: "Autre" });
     expect(u2.id).toBe(u1.id);
-    expect(u2.name).toBe("Zoumana");
+    expect(u2.name).toBe("Inoussa ZERBO");
     expect(await User.query().count()).toBe(1);
   });
 
@@ -52,8 +52,8 @@ dd("Helpers CRUD", () => {
   });
 
   it("updateOrCreate : met à jour ou crée", async () => {
-    const up = await User.updateOrCreate({ email: "z@a.com" }, { name: "Zoumana T." });
-    expect(up.name).toBe("Zoumana T.");
+    const up = await User.updateOrCreate({ email: "z@a.com" }, { name: "Inoussa Z." });
+    expect(up.name).toBe("Inoussa Z.");
     const created = await User.updateOrCreate({ email: "awa@a.com" }, { name: "Awa" });
     expect(created.name).toBe("Awa");
     expect(await User.query().count()).toBe(2);

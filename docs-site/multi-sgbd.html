@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-SGBD — Teloquent</title>
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <h1 class="page-title">Multi-SGBD</h1>
+  <p class="page-intro">Le même code applicatif fonctionne sur SQLite, MySQL et PostgreSQL. Une couche <em>Grammar</em> par dialecte gère les différences de SQL.</p>
+
+  <h2>Différences gérées automatiquement</h2>
+  <table>
+    <tr><th>Aspect</th><th>SQLite</th><th>MySQL</th><th>PostgreSQL</th></tr>
+    <tr><td>Quoting des identifiants</td><td><code>"col"</code></td><td><code>`col`</code></td><td><code>"col"</code></td></tr>
+    <tr><td>Placeholders</td><td><code>?</code></td><td><code>?</code></td><td><code>$1, $2</code></td></tr>
+    <tr><td>Clé générée à l'insert</td><td>lastInsertRowid</td><td>insertId</td><td><code>RETURNING</code></td></tr>
+    <tr><td>Upsert</td><td>ON CONFLICT</td><td>ON DUPLICATE KEY UPDATE</td><td>ON CONFLICT</td></tr>
+    <tr><td>Types (boolean, json…)</td><td>integer / text</td><td>tinyint / json</td><td>boolean / jsonb</td></tr>
+    <tr><td>Format de date</td><td>ISO</td><td><code>YYYY-MM-DD HH:MM:SS</code></td><td>ISO</td></tr>
+  </table>
+  <p>Vous écrivez le même code ; Teloquent produit le SQL adapté à la connexion active.</p>
+
+  <h2>Choisir le dialecte</h2>
+  <div class="code-block"><pre><code class="language-typescript">await ConnectionManager.addConnection({ driver: "sqlite", database: "app.sqlite" });
+// ou "mysql" / "pgsql" — le reste du code est identique</code></pre></div>
+
+  <h2>Tester sur plusieurs SGBD</h2>
+  <p>Le dépôt fournit un <code>docker-compose.yml</code> (Postgres + MySQL) et des scripts pour rejouer la suite de tests sur chaque dialecte.</p>
+  <div class="code-block"><pre><code class="language-bash">npm run db:up        # démarre Postgres + MySQL (Docker)
+npm run test:sqlite  # tests sur SQLite (par défaut)
+npm run test:pg      # tests sur PostgreSQL
+npm run test:mysql   # tests sur MySQL
+npm run db:down      # arrête et nettoie</code></pre></div>
+
+  <h2>Paramétrer par variables d'environnement</h2>
+  <div class="code-block"><pre><code class="language-bash">TELOQUENT_DIALECT=pgsql \
+PG_HOST=127.0.0.1 PG_PORT=5433 PG_USER=teloquent PG_PASSWORD=teloquent PG_DATABASE=teloquent \
+npm run test:pg</code></pre></div>
+
+  <h2>Intégration continue</h2>
+  <p>Un workflow GitHub Actions exécute automatiquement la suite sur les trois SGBD (services Docker Postgres et MySQL), garantissant la compatibilité multi-dialecte à chaque commit.</p>
+  <div class="callout">Bonne pratique : développez sur SQLite (rapide, zéro setup) puis validez sur le SGBD de production via <code>test:pg</code> / <code>test:mysql</code> avant de livrer.</div>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

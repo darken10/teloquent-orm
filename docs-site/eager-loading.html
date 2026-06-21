@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eager loading & withCount — Teloquent</title>
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <h1 class="page-title">Eager loading &amp; withCount</h1>
+  <p class="page-intro">Chargez les relations en une requête par relation pour éviter le problème N+1, y compris sur plusieurs niveaux, et comptez des relations sans les charger.</p>
+
+  <h2>Le problème N+1</h2>
+  <div class="code-block"><pre><code class="language-typescript">// ❌ N+1 : 1 requête pour les users + 1 requête par user
+const users = await User.all();
+for (const u of users) {
+  const posts = await u.posts().getResults(); // une requête à chaque tour
+}</code></pre></div>
+
+  <h2>with() : eager loading</h2>
+  <div class="code-block"><pre><code class="language-typescript">// ✅ 2 requêtes au total : 1 pour users, 1 pour tous leurs posts
+const users = await User.with("posts").get();
+for (const u of users) {
+  const posts = u.getRelation("posts"); // déjà chargé, aucune requête
+}
+
+// Plusieurs relations
+await User.with("posts", "profile", "roles").get();</code></pre></div>
+
+  <h2>Eager loading imbriqué</h2>
+  <p>Utilisez la notation pointée pour charger en cascade, sur n'importe quel type de relation et n'importe quelle profondeur.</p>
+  <div class="code-block"><pre><code class="language-typescript">const users = await User.with("posts.comments", "posts.tags").get();
+
+for (const user of users) {
+  for (const post of user.getRelation("posts")) {
+    post.getRelation("comments"); // chargé
+    post.getRelation("tags");     // chargé (relation N-N)
+  }
+}</code></pre></div>
+  <div class="callout tip">Chaque niveau est résolu en <strong>une seule requête</strong> (un <code>whereIn</code> sur l'ensemble des clés), même imbriqué.</div>
+
+  <h2>withCount()</h2>
+  <p>Ajoute un attribut <code>&lt;relation&gt;_count</code> à chaque modèle, sans charger les enregistrements liés.</p>
+  <div class="code-block"><pre><code class="language-typescript">const posts = await Post.query().withCount("comments", "tags").get();
+
+posts.first().getAttribute("comments_count"); // 12
+posts.first().getAttribute("tags_count");     // 3
+
+// Apparaît aussi dans la sérialisation
+posts.first().toJSON().comments_count;        // 12</code></pre></div>
+  <p><code>withCount</code> fonctionne pour <code>hasMany</code>, <code>hasOne</code>, <code>belongsTo</code> et <code>belongsToMany</code>, et respecte les soft deletes du modèle lié.</p>
+
+  <h2>Combiner avec le query builder</h2>
+  <div class="code-block"><pre><code class="language-typescript">const users = await User.query()
+  .where("is_active", true)
+  .with("posts.comments")
+  .withCount("posts")
+  .orderBy("name")
+  .paginate(1, 20);</code></pre></div>
+
+  <h2>Charger après coup (lazy eager)</h2>
+  <div class="code-block"><pre><code class="language-typescript">const user = await User.find(1);
+await user.load("posts");
+user.getRelation("posts");</code></pre></div>
+
+  <h2>Performance</h2>
+  <ul>
+    <li><code>with</code> : 1 requête supplémentaire par relation (et par niveau), au lieu d'une par parent.</li>
+    <li><code>withCount</code> : 1 requête agrégée groupée par relation.</li>
+    <li>Les clés sont comparées de façon tolérante au type (certains drivers renvoient les <code>bigint</code> en chaînes).</li>
+  </ul>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

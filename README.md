@@ -18,7 +18,7 @@ class User extends Model {
   posts() { return this.hasMany(Post); }
 }
 
-const user = await User.create({ name: "Zoumana" });
+const user = await User.create({ name: "Inoussa ZERBO" });
 const users = await User.where("is_active", true).with("posts").get();
 ```
 
@@ -144,7 +144,7 @@ Décorateurs optionnels : `@table("...")`, `@primaryKey("...")`, `@casts({...})`
 
 ```ts
 // Créer
-const u = await User.create({ name: "Zoumana", email: "z@africasys.com" });
+const u = await User.create({ name: "Inoussa ZERBO", email: "z@africasys.com" });
 
 // Lire
 await User.find(1);
@@ -154,7 +154,7 @@ await User.where("is_active", true).get();
 await User.where("email", "z@africasys.com").first();
 
 // Mettre à jour
-u.name = "Zoumana T.";
+u.name = "Inoussa Z.";
 await u.save();                 // n'envoie que les colonnes modifiées (dirty tracking)
 await u.update({ name: "X" });
 

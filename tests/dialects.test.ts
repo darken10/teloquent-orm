@@ -83,14 +83,14 @@ dd(`Cross-dialecte [${testDialect()}]`, () => {
   });
 
   it("create récupère la clé générée", async () => {
-    const u = await User.create({ name: "Zoumana", email: "z@a.com" });
+    const u = await User.create({ name: "Inoussa ZERBO", email: "z@a.com" });
     expect(typeof u.id).toBe("number");
     expect(u.id).toBeGreaterThan(0);
   });
 
   it("where + first", async () => {
     const u = await User.where("email", "z@a.com").first();
-    expect(u?.name).toBe("Zoumana");
+    expect(u?.name).toBe("Inoussa ZERBO");
   });
 
   it("hasMany eager + belongsTo eager", async () => {

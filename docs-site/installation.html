@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Installation — Teloquent</title>
+<script>(function(){var t=localStorage.getItem('teloquent-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<main>
+  <h1 class="page-title">Installation</h1>
+  <p class="page-intro">Installez Teloquent et le driver de votre base de données, puis configurez TypeScript.</p>
+
+  <h2>Prérequis</h2>
+  <ul>
+    <li><strong>Node.js ≥ 18</strong> (le repli SQLite natif <code>node:sqlite</code> nécessite Node ≥ 22).</li>
+    <li>Un projet <strong>ESM</strong> (<code>"type": "module"</code> dans votre <code>package.json</code>).</li>
+    <li><strong>TypeScript ≥ 5</strong> (recommandé, mais Teloquent fonctionne aussi en JS).</li>
+  </ul>
+
+  <h2>Installer le paquet</h2>
+  <div class="code-block"><pre><code class="language-bash">npm install teloquent</code></pre></div>
+
+  <h2>Installer un driver</h2>
+  <p>Teloquent ne dépend d'aucun driver par défaut : choisissez celui de votre SGBD.</p>
+  <table>
+    <tr><th>SGBD</th><th>Paquet</th><th>Commande</th></tr>
+    <tr><td>SQLite</td><td><code>better-sqlite3</code></td><td><code>npm install better-sqlite3</code></td></tr>
+    <tr><td>PostgreSQL</td><td><code>pg</code></td><td><code>npm install pg</code></td></tr>
+    <tr><td>MySQL / MariaDB</td><td><code>mysql2</code></td><td><code>npm install mysql2</code></td></tr>
+  </table>
+  <div class="callout tip"><strong>Astuce SQLite :</strong> si <code>better-sqlite3</code> ne se compile pas, Teloquent se replie automatiquement sur le module natif <code>node:sqlite</code> (Node ≥ 22, aucune compilation).</div>
+
+  <h2>Configurer TypeScript</h2>
+  <p>Deux options sont indispensables au bon fonctionnement de l'accès magique aux attributs.</p>
+  <span class="filename">tsconfig.json</span>
+  <div class="code-block"><pre><code class="language-json">{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false
+  }
+}</code></pre></div>
+  <div class="callout warn"><strong>Important :</strong> <code>useDefineForClassFields: false</code> empêche les champs déclarés (<code>declare name: string</code>) d'être définis comme propriétés réelles, ce qui permet au <code>Proxy</code> d'intercepter les accès aux attributs. Sans cela, <code>user.name</code> renverra <code>undefined</code>.</div>
+
+  <h2>Premier exemple</h2>
+  <p>Créez un fichier et lancez-le avec <code>tsx</code> (<code>npm i -D tsx</code>) ou après compilation.</p>
+  <span class="filename">app.ts</span>
+  <div class="code-block"><pre><code class="language-typescript">import { Model, ConnectionManager, Schema } from "teloquent";
+
+await ConnectionManager.addConnection({ driver: "sqlite", database: ":memory:" });
+
+await Schema().create("users", (t) =&gt; {
+  t.increments("id");
+  t.string("name");
+  t.timestamps();
+});
+
+class User extends Model {
+  declare id: number;
+  declare name: string;
+}
+
+const u = await User.create({ name: "Inoussa ZERBO" });
+console.log(u.id, u.name);            // 1 Inoussa ZERBO
+console.log((await User.all()).length); // 1</code></pre></div>
+  <div class="code-block"><pre><code class="language-bash">npx tsx app.ts</code></pre></div>
+
+  <h2>Vérifier l'installation</h2>
+  <p>Si l'exemple affiche <code>1 Inoussa ZERBO</code>, tout est prêt. Passez à la page <a href="connexions.html">Connexions</a> pour configurer votre base réelle.</p>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>
