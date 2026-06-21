@@ -1,6 +1,6 @@
 # Teloquent
 
-[![npm](https://img.shields.io/npm/v/teloquent-orm.svg)](https://www.npmjs.com/package/teloquent-orm)
+[![npm](https://img.shields.io/npm/v/teloquent.svg)](https://www.npmjs.com/package/teloquent)
 [![CI](https://github.com/AfricaSys/teloquent/actions/workflows/ci.yml/badge.svg)](https://github.com/AfricaSys/teloquent/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 ![Dialects](https://img.shields.io/badge/SQLite%20%7C%20MySQL%20%7C%20PostgreSQL-supported-success)
@@ -8,7 +8,7 @@
 Un ORM **TypeScript** Active Record inspiré de **Laravel Eloquent**, avec un typage fort et le support de **SQLite, MySQL et PostgreSQL**.
 
 ```ts
-import { Model, ConnectionManager } from "teloquent-orm";
+import { Model, ConnectionManager } from "teloquent";
 
 await ConnectionManager.addConnection({ driver: "sqlite", database: "app.sqlite" });
 
@@ -47,7 +47,7 @@ const users = await User.where("is_active", true).with("posts").get();
 ## Installation
 
 ```bash
-npm install teloquent-orm
+npm install teloquent
 # + le driver de votre SGBD :
 npm install better-sqlite3   # SQLite (ou Node >= 22 : module natif node:sqlite en repli)
 npm install pg               # PostgreSQL
@@ -67,7 +67,7 @@ Teloquent est en ESM, Node >= 18. Activez les décorateurs dans votre `tsconfig.
 ## Connexions
 
 ```ts
-import { ConnectionManager } from "teloquent-orm";
+import { ConnectionManager } from "teloquent";
 
 // SQLite
 await ConnectionManager.addConnection({ driver: "sqlite", database: "app.sqlite" });
@@ -104,7 +104,7 @@ await ConnectionManager.connection().transaction(async () => {
 Comme Eloquent, un modèle est « schemaless » : on déclare les propriétés pour le typage (`declare`), les attributs sont stockés dynamiquement.
 
 ```ts
-import { Model } from "teloquent-orm";
+import { Model } from "teloquent";
 
 class User extends Model {
   // Configuration (toutes optionnelles)
@@ -393,7 +393,7 @@ users.toJSON();
 ### Blueprint
 
 ```ts
-import { Schema } from "teloquent-orm";
+import { Schema } from "teloquent";
 
 await Schema().create("users", (t) => {
   t.increments("id");
@@ -423,7 +423,7 @@ Types disponibles : `increments`, `integer`, `bigInteger`, `string`, `text`, `bo
 ### Migrations
 
 ```ts
-import { Migrator, Schema, type MigrationEntry } from "teloquent-orm";
+import { Migrator, Schema, type MigrationEntry } from "teloquent";
 
 const migrations: MigrationEntry[] = [
   {
@@ -448,7 +448,7 @@ Le `Migrator` gère automatiquement une table `migrations` (name, batch), `run` 
 ## Événements
 
 ```ts
-import { ModelEvents } from "teloquent-orm";
+import { ModelEvents } from "teloquent";
 
 ModelEvents.on(User, "creating", (u) => { u.email = String(u.email).toLowerCase(); });
 ModelEvents.on(User, "deleted", (u) => { console.log("supprimé", u.getKey()); });

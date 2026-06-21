@@ -4,7 +4,7 @@ Toutes les modifications notables de Teloquent sont documentées ici.
 Le format suit [Keep a Changelog](https://keepachangelog.com/) et le
 [versionnage sémantique](https://semver.org/lang/fr/).
 
-## [3.0.0] - 2026-06-21
+## [1.0.0] - 2026-06-21
 
 Première version publique. ORM Active Record TypeScript inspiré d'Eloquent.
 

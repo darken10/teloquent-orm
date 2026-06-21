@@ -13,7 +13,7 @@
   <p class="page-intro">Le <code>ConnectionManager</code> est le registre central des connexions. On enregistre une ou plusieurs connexions au démarrage, puis les modèles les utilisent automatiquement.</p>
 
   <h2>Enregistrer une connexion</h2>
-  <div class="code-block"><pre><code class="language-typescript">import { ConnectionManager } from "teloquent-orm";
+  <div class="code-block"><pre><code class="language-typescript">import { ConnectionManager } from "teloquent";
 
 // SQLite (fichier ou ":memory:")
 await ConnectionManager.addConnection({ driver: "sqlite", database: "app.sqlite" });</code></pre></div>
@@ -80,7 +80,7 @@ result.affectedRows; // nombre de lignes affectées</code></pre></div>
 
   <h2>Connexion personnalisée</h2>
   <p>Pour un driver maison (ou des tests), on peut enregistrer une <code>Connection</code> déjà construite.</p>
-  <div class="code-block"><pre><code class="language-typescript">import { Connection, ConnectionManager, PostgresGrammar } from "teloquent-orm";
+  <div class="code-block"><pre><code class="language-typescript">import { Connection, ConnectionManager, PostgresGrammar } from "teloquent";
 
 const conn = new Connection(monDriverCustom, new PostgresGrammar());
 ConnectionManager.register(conn, "default");</code></pre></div>
