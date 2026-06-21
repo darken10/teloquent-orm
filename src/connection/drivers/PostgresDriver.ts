@@ -53,9 +53,13 @@ export class PostgresDriver implements Driver {
 
   async statement(sql: string, bindings: Bindings): Promise<StatementResult> {
     const res = await this.ensure().query(sql, bindings);
+    // Pour un INSERT ... RETURNING <pk>, la valeur générée est la 1re colonne
+    // de la 1re ligne renvoyée (nom de clé primaire agnostique).
+    const first = res.rows?.[0];
+    const lastInsertId = first ? (Object.values(first)[0] as number | undefined) : undefined;
     return {
       affectedRows: res.rowCount ?? 0,
-      lastInsertId: res.rows?.[0]?.id,
+      lastInsertId,
     };
   }
 

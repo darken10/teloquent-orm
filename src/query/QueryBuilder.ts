@@ -315,8 +315,8 @@ export class QueryBuilder<Row = Record<string, unknown>> {
     return result.affectedRows;
   }
 
-  async insertGetId(data: Record<string, unknown>): Promise<number> {
-    const { sql, bindings } = this.grammar.compileInsert(this.components.table, [data]);
+  async insertGetId(data: Record<string, unknown>, primaryKey = "id"): Promise<number> {
+    const { sql, bindings } = this.grammar.compileInsertGetId(this.components.table, data, primaryKey);
     const result = await this.connection.statement(sql, bindings);
     return Number(result.lastInsertId ?? 0);
   }

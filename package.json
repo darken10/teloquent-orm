@@ -23,6 +23,11 @@
     "example": "tsx examples/basic.ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:sqlite": "vitest run",
+    "test:pg": "TELOQUENT_DIALECT=pgsql vitest run",
+    "test:mysql": "TELOQUENT_DIALECT=mysql vitest run",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down -v",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
@@ -56,7 +61,10 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.0",
     "@types/node": "^20.0.0",
+    "@types/pg": "^8.11.0",
     "better-sqlite3": "^11.0.0",
+    "mysql2": "^3.9.0",
+    "pg": "^8.11.0",
     "tsx": "^4.7.0",
     "typescript": "^5.4.0",
     "vitest": "^1.0.0"

@@ -141,6 +141,18 @@ export abstract class Grammar {
     return { sql: this.finalize(sql), bindings };
   }
 
+  /**
+   * INSERT renvoyant la clé générée. Par défaut identique à compileInsert
+   * (la clé est lue via lastInsertId du driver). Postgres surcharge avec RETURNING.
+   */
+  compileInsertGetId(
+    table: string,
+    row: Record<string, unknown>,
+    _primaryKey = "id"
+  ): CompiledQuery {
+    return this.compileInsert(table, [row]);
+  }
+
   // ---------------------------------------------------------------- UPDATE
 
   compileUpdate(q: QueryComponents, data: Record<string, unknown>): CompiledQuery {

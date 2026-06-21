@@ -26,6 +26,12 @@ export class ConnectionManager {
     return connection;
   }
 
+  /** Enregistre une connexion déjà construite (driver custom, tests, etc.). */
+  static register(connection: Connection, name = "default"): Connection {
+    this.connections.set(name, connection);
+    return connection;
+  }
+
   /** Récupère une connexion (par défaut si non précisée). */
   static connection(name?: string): Connection {
     const key = name ?? this.defaultName;

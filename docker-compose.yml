@@ -1,0 +1,32 @@
+# Bases de données pour tester Teloquent sur MySQL et PostgreSQL.
+#   docker compose up -d      # démarre les deux
+#   npm run test:pg           # tests sur PostgreSQL
+#   npm run test:mysql        # tests sur MySQL
+#   docker compose down -v    # arrête et nettoie
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: teloquent
+      POSTGRES_PASSWORD: teloquent
+      POSTGRES_DB: teloquent
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U teloquent"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: teloquent
+      MYSQL_DATABASE: teloquent
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pteloquent"]
+      interval: 3s
+      timeout: 3s
+      retries: 20

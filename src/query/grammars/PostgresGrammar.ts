@@ -1,4 +1,5 @@
 import { Grammar } from "./Grammar.js";
+import type { CompiledQuery } from "../types.js";
 
 export class PostgresGrammar extends Grammar {
   protected openQuote = '"';
@@ -8,6 +9,16 @@ export class PostgresGrammar extends Grammar {
   protected finalize(sql: string): string {
     let i = 0;
     return sql.replace(/\?/g, () => `$${++i}`);
+  }
+
+  /** Postgres récupère la clé générée via RETURNING. */
+  override compileInsertGetId(
+    table: string,
+    row: Record<string, unknown>,
+    primaryKey = "id"
+  ): CompiledQuery {
+    const base = this.compileInsert(table, [row]); // déjà finalisé ($1...)
+    return { sql: `${base.sql} returning ${this.wrap(primaryKey)}`, bindings: base.bindings };
   }
 
   typeFor(type: string): string {

@@ -298,7 +298,7 @@ export class Model {
       await fireModelEvent(this, "creating");
       const id = await conn
         .table(ctor.getTable())
-        .insertGetId(this.attributesForStorage(this.attributes));
+        .insertGetId(this.attributesForStorage(this.attributes), this.getKeyName());
       if (ctor.incrementing && id) this.attributes[this.getKeyName()] = id;
       this.$exists = true;
       await fireModelEvent(this, "created");
