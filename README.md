@@ -1,5 +1,10 @@
 # Teloquent
 
+[![npm](https://img.shields.io/npm/v/teloquent.svg)](https://www.npmjs.com/package/teloquent)
+[![CI](https://github.com/AfricaSys/teloquent/actions/workflows/ci.yml/badge.svg)](https://github.com/AfricaSys/teloquent/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+![Dialects](https://img.shields.io/badge/SQLite%20%7C%20MySQL%20%7C%20PostgreSQL-supported-success)
+
 Un ORM **TypeScript** Active Record inspiré de **Laravel Eloquent**, avec un typage fort et le support de **SQLite, MySQL et PostgreSQL**.
 
 ```ts

@@ -132,8 +132,9 @@ Dernière mise à jour : 2026-06-19.
 - [ ] Tests des cas d'erreur (`findOrFail`, contrainte unique, rollback)
 - [ ] Couverture de code (coverage) + seuil minimal
 - [ ] Typage encore plus fort des attributs (génériques sur les colonnes du modèle)
-- [ ] Publication npm (build dual ESM/CJS, `.d.ts`)
-- [ ] CHANGELOG + versionnage sémantique
+- [x] Préparation publication npm : LICENSE, CHANGELOG, badges, métadonnées package.json, `.npmignore`, `prepublishOnly`, `npm pack` vérifié (.d.ts inclus)
+- [ ] `npm publish` effectif (login + nom disponible) — action manuelle
+- [ ] Build dual ESM/CJS (optionnel, ESM seul pour l'instant)
 
 ---
 

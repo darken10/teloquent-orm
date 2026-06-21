@@ -1,0 +1,16 @@
+# Le champ "files" de package.json publie uniquement dist/.
+# Ce fichier exclut explicitement le reste par sécurité.
+src/
+tests/
+examples/
+playground-api/
+.github/
+docker-compose.yml
+tsconfig*.json
+vitest.config.ts
+*.sqlite
+*.sqlite3
+*.db
+GUIDE_TECHNIQUE.md
+TODO.md
+.gitignore
