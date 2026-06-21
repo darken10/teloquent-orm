@@ -117,7 +117,7 @@
   const footer = document.createElement("footer");
   footer.innerHTML =
     'Teloquent v3 — ORM TypeScript inspiré de Laravel Eloquent · Licence MIT · ' +
-    '<a href="https://www.npmjs.com/package/teloquent">npm</a>';
+    '<a href="https://www.npmjs.com/package/teloquent-orm">npm</a>';
   document.body.appendChild(footer);
 
   // ----- TOC auto (à partir des h2/h3 du main)

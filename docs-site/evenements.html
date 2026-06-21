@@ -13,7 +13,7 @@
   <p class="page-intro">Réagissez au cycle de vie des modèles (création, mise à jour, suppression) via des observers, façon « model events » d'Eloquent.</p>
 
   <h2>S'abonner</h2>
-  <div class="code-block"><pre><code class="language-typescript">import { ModelEvents } from "teloquent";
+  <div class="code-block"><pre><code class="language-typescript">import { ModelEvents } from "teloquent-orm";
 
 ModelEvents.on(User, "creating", (user) =&gt; {
   user.email = String(user.email).toLowerCase();

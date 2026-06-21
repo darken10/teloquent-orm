@@ -13,7 +13,7 @@
   <p class="page-intro">Un modèle Teloquent est une classe qui étend <code>Model</code>. Comme Eloquent, il est « schemaless » : on déclare les propriétés pour le typage, les attributs sont stockés dynamiquement.</p>
 
   <h2>Modèle minimal</h2>
-  <div class="code-block"><pre><code class="language-typescript">import { Model } from "teloquent";
+  <div class="code-block"><pre><code class="language-typescript">import { Model } from "teloquent-orm";
 
 class User extends Model {
   declare id: number;
@@ -100,7 +100,7 @@ u.forceFill({ is_admin: true });</code></pre></div>
 
   <h2>Décorateurs (optionnels)</h2>
   <p>Sucre syntaxique équivalent aux propriétés statiques.</p>
-  <div class="code-block"><pre><code class="language-typescript">import { Model, table, casts } from "teloquent";
+  <div class="code-block"><pre><code class="language-typescript">import { Model, table, casts } from "teloquent-orm";
 
 @table("users")
 @casts({ is_active: "boolean" })

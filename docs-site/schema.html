@@ -13,7 +13,7 @@
   <p class="page-intro">Le constructeur de schéma (<code>Schema</code> + <code>Blueprint</code>) crée et modifie les tables de façon portable entre SQLite, MySQL et PostgreSQL.</p>
 
   <h2>Créer une table</h2>
-  <div class="code-block"><pre><code class="language-typescript">import { Schema } from "teloquent";
+  <div class="code-block"><pre><code class="language-typescript">import { Schema } from "teloquent-orm";
 
 await Schema().create("users", (t) =&gt; {
   t.increments("id");

@@ -14,7 +14,7 @@
 
   <h2>Définir des migrations</h2>
   <p>Une migration est un objet avec un <code>name</code> unique et des fonctions <code>up</code>/<code>down</code>.</p>
-  <div class="code-block"><pre><code class="language-typescript">import { Schema, type MigrationEntry } from "teloquent";
+  <div class="code-block"><pre><code class="language-typescript">import { Schema, type MigrationEntry } from "teloquent-orm";
 
 export const migrations: MigrationEntry[] = [
   {
@@ -35,7 +35,7 @@ export const migrations: MigrationEntry[] = [
   <div class="callout tip">Préfixez les noms par un numéro/horodatage (<code>001_</code>, <code>20260621_</code>) : l'ordre du tableau définit l'ordre d'exécution.</div>
 
   <h2>Exécuter</h2>
-  <div class="code-block"><pre><code class="language-typescript">import { Migrator } from "teloquent";
+  <div class="code-block"><pre><code class="language-typescript">import { Migrator } from "teloquent-orm";
 import { migrations } from "./migrations.js";
 
 const m = new Migrator();
@@ -64,7 +64,7 @@ await m.status(migrations);   // [{ name, ran, batch }]</code></pre></div>
   <h2>Script CLI maison</h2>
   <p>Teloquent fournit la mécanique ; vous l'exposez comme vous le souhaitez (ex. via npm scripts).</p>
   <span class="filename">migrate.ts</span>
-  <div class="code-block"><pre><code class="language-typescript">import { ConnectionManager, Migrator } from "teloquent";
+  <div class="code-block"><pre><code class="language-typescript">import { ConnectionManager, Migrator } from "teloquent-orm";
 import { migrations } from "./migrations.js";
 
 await ConnectionManager.addConnection({ driver: "sqlite", database: "app.sqlite" });
@@ -82,7 +82,7 @@ tsx migrate.ts rollback
 tsx migrate.ts status</code></pre></div>
 
   <h2>Classe Migration (alternative)</h2>
-  <div class="code-block"><pre><code class="language-typescript">import { Migration } from "teloquent";
+  <div class="code-block"><pre><code class="language-typescript">import { Migration } from "teloquent-orm";
 
 class CreateUsers extends Migration {
   async up()   { await this.schema.create("users", (t) =&gt; { t.increments("id"); }); }
