@@ -1,5 +1,27 @@
 import type { Model, ModelCtor } from "../eloquent/Model.js";
 
+/** Table d'un modèle parent (instance). */
+export function parentTable(parent: Model): string {
+  return (parent.constructor as unknown as typeof Model).getTable();
+}
+
+/**
+ * Construit le SQL d'une sous-requête EXISTS corrélée côté "enfant"
+ * (related.foreignCol = parent.parentCol), pour whereHas.
+ */
+export function correlatedExists(
+  related: ModelCtor<Model>,
+  foreignCol: string,
+  parentCol: string,
+  callback?: (q: any) => void
+): { sql: string; bindings: unknown[] } {
+  const cls = related as unknown as typeof Model;
+  const q: any = (cls as any).query();
+  q.whereColumn(foreignCol, "=", parentCol);
+  if (callback) callback(q);
+  return q.toRawSql();
+}
+
 /**
  * Compte les enfants regroupés par clé étrangère et écrit `<relation>_count`
  * sur chaque parent. Partagé par HasMany et HasOne.

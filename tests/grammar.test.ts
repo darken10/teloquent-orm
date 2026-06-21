@@ -151,6 +151,34 @@ describe("Grammar — increment / upsert", () => {
   });
 });
 
+describe("Grammar — where imbriqué / colonne", () => {
+  const g = new SQLiteGrammar();
+
+  it("where imbriqué (closure) produit un groupe parenthésé", () => {
+    const { sql, bindings } = qb(g)
+      .where("a", 1)
+      .where((q) => q.where("b", 2).orWhere("c", 3))
+      .toSql();
+    expect(sql).toBe('select * from "users" where "a" = ? and ("b" = ? or "c" = ?)');
+    expect(bindings).toEqual([1, 2, 3]);
+  });
+
+  it("whereColumn ne lie aucune valeur", () => {
+    const { sql, bindings } = qb(g).whereColumn("hi", ">", "lo").toSql();
+    expect(sql).toBe('select * from "users" where "hi" > "lo"');
+    expect(bindings).toEqual([]);
+  });
+
+  it("Postgres : numérotation correcte avec groupe imbriqué", () => {
+    const { sql, bindings } = qb(new PostgresGrammar())
+      .where("a", 1)
+      .where((q) => q.where("b", 2))
+      .toSql();
+    expect(sql).toBe('select * from "users" where "a" = $1 and ("b" = $2)');
+    expect(bindings).toEqual([1, 2]);
+  });
+});
+
 describe("Grammar — agrégats", () => {
   it("count(*) as aggregate", () => {
     const g = new SQLiteGrammar();

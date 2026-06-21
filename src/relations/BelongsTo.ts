@@ -24,6 +24,15 @@ export class BelongsTo<R extends Model> extends Relation<R> {
     return fresh.whereIn(this.localKey, keys).get();
   }
 
+  existsSubquery(callback?: (q: any) => void) {
+    const cls = this.related as unknown as typeof Model;
+    const parentTbl = (this.parent.constructor as unknown as typeof Model).getTable();
+    const q: any = (cls as any).query();
+    q.whereColumn(`${cls.getTable()}.${this.localKey}`, "=", `${parentTbl}.${this.foreignKey}`);
+    if (callback) callback(q);
+    return q.toRawSql();
+  }
+
   async loadCount(parents: Model[], relationName: string): Promise<void> {
     const cls = this.related as unknown as typeof Model;
     const keys = [...new Set(parents.map((p) => p.getAttribute(this.foreignKey)))];

@@ -73,16 +73,36 @@ export class QueryBuilder<Row = Record<string, unknown>> {
 
   // ----------------------------------------------------------------- where
 
+  where(callback: (q: QueryBuilder) => void): this;
   where(column: string, value: unknown): this;
   where(column: string, operator: WhereOperator, value: unknown): this;
-  where(column: string, operatorOrValue: unknown, value?: unknown): this {
+  where(column: string | ((q: QueryBuilder) => void), operatorOrValue?: unknown, value?: unknown): this {
+    if (typeof column === "function") return this.whereNested(column, "and");
     return this.addBasicWhere(column, operatorOrValue, value, "and");
   }
 
+  orWhere(callback: (q: QueryBuilder) => void): this;
   orWhere(column: string, value: unknown): this;
   orWhere(column: string, operator: WhereOperator, value: unknown): this;
-  orWhere(column: string, operatorOrValue: unknown, value?: unknown): this {
+  orWhere(column: string | ((q: QueryBuilder) => void), operatorOrValue?: unknown, value?: unknown): this {
+    if (typeof column === "function") return this.whereNested(column, "or");
     return this.addBasicWhere(column, operatorOrValue, value, "or");
+  }
+
+  /** Groupe de conditions imbriqué : where(q => q.where(...).orWhere(...)). */
+  private whereNested(callback: (q: QueryBuilder) => void, boolean: BooleanJoin): this {
+    const sub = new QueryBuilder(this.connection, this.grammar);
+    callback(sub);
+    this.components.wheres.push({ type: "nested", wheres: sub.components.wheres, boolean });
+    return this;
+  }
+
+  /** Compare deux colonnes (sans valeur liée). */
+  whereColumn(first: string, operatorOrSecond: string, second?: string, boolean: BooleanJoin = "and"): this {
+    const operator = second === undefined ? "=" : operatorOrSecond;
+    const right = second === undefined ? operatorOrSecond : second;
+    this.components.wheres.push({ type: "column", column: first, operator, second: right, boolean });
+    return this;
   }
 
   private addBasicWhere(
@@ -199,6 +219,11 @@ export class QueryBuilder<Row = Record<string, unknown>> {
   /** SQL + bindings (debug). */
   toSql(): { sql: string; bindings: unknown[] } {
     return this.grammar.compileSelect(this.components);
+  }
+
+  /** SQL non finalisé (placeholders `?`) pour embarquer dans une sous-requête. */
+  toRawSql(): { sql: string; bindings: unknown[] } {
+    return this.grammar.compileSelectRaw(this.components);
   }
 
   async get(): Promise<Row[]> {

@@ -106,6 +106,21 @@ export class BelongsToMany<R extends Model> {
     }
   }
 
+  existsSubquery(callback?: (q: any) => void) {
+    const cls = this.related as unknown as typeof Model;
+    const parentTbl = (this.parent.constructor as unknown as typeof Model).getTable();
+    const q: any = (cls as any).query();
+    q.join(
+      this.table,
+      `${this.relatedTable}.${this.relatedKey}`,
+      "=",
+      `${this.table}.${this.relatedPivotKey}`
+    );
+    q.whereColumn(`${this.table}.${this.foreignPivotKey}`, "=", `${parentTbl}.${this.parentKey}`);
+    if (callback) callback(q);
+    return q.toRawSql();
+  }
+
   async loadCount(parents: Model[], relationName: string): Promise<void> {
     const keys = [...new Set(parents.map((p) => p.getAttribute(this.parentKey)))];
     const counts = new Map<string, number>();

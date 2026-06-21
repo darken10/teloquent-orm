@@ -106,6 +106,49 @@ export class ModelQueryBuilder<T extends Model> extends QueryBuilder<any> {
     return super.toSql();
   }
 
+  override toRawSql(): { sql: string; bindings: unknown[] } {
+    this.applyScopes();
+    return super.toRawSql();
+  }
+
+  // ------------------------------------------------------------- whereHas
+  /** Filtre par existence d'une relation (sous-requête EXISTS corrélée). */
+  whereHas(name: string, callback?: (q: ModelQueryBuilder<any>) => void, boolean: "and" | "or" = "and"): this {
+    const sub = this.relationExistsSql(name, callback);
+    return this.whereRaw(`exists (${sub.sql})`, sub.bindings, boolean);
+  }
+
+  orWhereHas(name: string, callback?: (q: ModelQueryBuilder<any>) => void): this {
+    return this.whereHas(name, callback, "or");
+  }
+
+  /** Alias : existence sans contrainte. */
+  has(name: string): this {
+    return this.whereHas(name);
+  }
+
+  /** Filtre par absence d'une relation (NOT EXISTS). */
+  doesntHave(name: string): this {
+    const sub = this.relationExistsSql(name);
+    return this.whereRaw(`not exists (${sub.sql})`, sub.bindings);
+  }
+
+  private relationExistsSql(
+    name: string,
+    callback?: (q: ModelQueryBuilder<any>) => void
+  ): { sql: string; bindings: unknown[] } {
+    const instance = new this.model();
+    const relation = (instance as any)[name];
+    if (typeof relation !== "function") {
+      throw new Error(`Relation "${name}" introuvable sur ${this.model.name} pour whereHas.`);
+    }
+    const rel = relation.call(instance);
+    if (typeof rel.existsSubquery !== "function") {
+      throw new Error(`whereHas non supporté pour la relation "${name}".`);
+    }
+    return rel.existsSubquery(callback);
+  }
+
   protected override async aggregate(fn: string, column = "*"): Promise<number> {
     this.applyScopes();
     return super.aggregate(fn, column);

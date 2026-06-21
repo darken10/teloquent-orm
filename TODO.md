@@ -87,7 +87,7 @@ Dernière mise à jour : 2026-06-19.
 - [x] Eager loading **imbriqué** : `with("posts.comments")` (récursif, tous types de relations)
 - [x] `withCount` (hasMany / hasOne / belongsTo / belongsToMany)
 - [ ] Eager loading **contraint** : `with({ posts: q => q.where(...) })`
-- [ ] `whereHas` / `has` / `doesntHave`
+- [x] `whereHas` / `orWhereHas` / `has` / `doesntHave` (EXISTS corrélé, tous types de relations)
 
 ### Modèle
 - [x] **Soft deletes** (`deleted_at`, `delete` soft, `withTrashed`, `onlyTrashed`, `restore`, `forceDelete`, `trashed`) + `Blueprint.softDeletes()`
@@ -99,8 +99,8 @@ Dernière mise à jour : 2026-06-19.
 - [ ] Événements `saving` / `saved` / `retrieved` + classes Observer dédiées
 
 ### Query Builder
+- [x] `whereColumn`, groupes de `where` imbriqués (closures `where(q => ...)`), `selectRaw`
 - [ ] Sous-requêtes (`whereIn` avec closure, `selectSub`)
-- [ ] `whereColumn`, groupes de `where` imbriqués (closures `where(q => ...)`)
 - [ ] `orHaving`, `havingRaw`
 - [ ] `rightJoin`, `crossJoin`, jointures avec closure
 - [x] `upsert` (on conflict / on duplicate key, multi-dialecte)
@@ -144,6 +144,7 @@ Dernière mise à jour : 2026-06-19.
 3. ~~**Pagination** (`paginate`, `simplePaginate`, `chunk`)~~ ✅ fait
 4. ~~**MySQL + PostgreSQL** (validation PG + infra docker/CI multi-dialecte)~~ ✅ fait (confirmer MySQL sur vrai serveur)
 5. ~~**Eager loading imbriqué** + `withCount`~~ ✅ fait
-6. **Query builder avancé** (`whereHas`, where imbriqués) ou **runner de migrations** + `Schema().table()`.
+6. ~~**Query builder avancé** (`whereHas`, where imbriqués, `whereColumn`)~~ ✅ fait
+7. **Runner de migrations** + `Schema().table()` (ALTER), ou publication npm.
 5. **Pagination** (`paginate`, `chunk`).
 6. CI multi-SGBD + publication npm.

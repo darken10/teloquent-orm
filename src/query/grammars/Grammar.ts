@@ -41,6 +41,17 @@ export abstract class Grammar {
   // ---------------------------------------------------------------- SELECT
 
   compileSelect(q: QueryComponents): CompiledQuery {
+    const raw = this.compileSelectRaw(q);
+    return { sql: this.finalize(raw.sql), bindings: raw.bindings };
+  }
+
+  /**
+   * Comme compileSelect mais SANS finalize (placeholders `?` conservés).
+   * Utilisé pour les sous-requêtes corrélées (EXISTS) afin que la
+   * renumérotation Postgres ($1, $2...) ne se fasse qu'une fois, au niveau
+   * de la requête parente.
+   */
+  compileSelectRaw(q: QueryComponents): CompiledQuery {
     const bindings: unknown[] = [];
     const parts: string[] = [];
 
@@ -81,7 +92,7 @@ export abstract class Grammar {
     if (q.limit !== undefined) parts.push("limit", String(q.limit));
     if (q.offset !== undefined) parts.push("offset", String(q.offset));
 
-    return { sql: this.finalize(parts.join(" ")), bindings };
+    return { sql: parts.join(" "), bindings };
   }
 
   // ---------------------------------------------------------------- WHERE
@@ -124,6 +135,12 @@ export abstract class Grammar {
       case "raw":
         if (w.values) w.values.forEach((v) => bindings.push(v));
         return w.sql!;
+      case "column":
+        return `${this.wrap(w.column!)} ${w.operator} ${this.wrap(w.second!)}`;
+      case "nested": {
+        const inner = this.compileWheres(w.wheres ?? [], bindings);
+        return inner ? `(${inner})` : "1 = 1";
+      }
       default:
         return "";
     }

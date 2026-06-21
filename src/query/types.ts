@@ -3,13 +3,17 @@ import type { OrderDirection } from "../types/index.js";
 export type BooleanJoin = "and" | "or";
 
 export interface WhereClause {
-  type: "basic" | "in" | "notIn" | "null" | "notNull" | "between" | "raw";
+  type: "basic" | "in" | "notIn" | "null" | "notNull" | "between" | "raw" | "column" | "nested";
   boolean: BooleanJoin;
   column?: string;
   operator?: string;
   value?: unknown;
   values?: unknown[];
   sql?: string;
+  /** Second membre pour un where colonne-à-colonne. */
+  second?: string;
+  /** Sous-clauses pour un groupe imbriqué. */
+  wheres?: WhereClause[];
 }
 
 export interface OrderClause {
