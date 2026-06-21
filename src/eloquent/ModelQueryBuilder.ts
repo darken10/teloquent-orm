@@ -15,6 +15,7 @@ type TrashMode = "default" | "with" | "only";
  */
 export class ModelQueryBuilder<T extends Model> extends QueryBuilder<any> {
   private eagerLoad: string[] = [];
+  private withCountList: string[] = [];
   private trashMode: TrashMode = "default";
   private scopesApplied = false;
 
@@ -26,9 +27,15 @@ export class ModelQueryBuilder<T extends Model> extends QueryBuilder<any> {
     super(connection, grammar);
   }
 
-  /** Déclare les relations à charger en eager loading. */
+  /** Déclare les relations à charger en eager loading (supporte "a.b.c"). */
   with(...relations: string[]): this {
     this.eagerLoad.push(...relations);
+    return this;
+  }
+
+  /** Ajoute un compteur `<relation>_count` sans charger la relation. */
+  withCount(...relations: string[]): this {
+    this.withCountList.push(...relations);
     return this;
   }
 
@@ -76,8 +83,9 @@ export class ModelQueryBuilder<T extends Model> extends QueryBuilder<any> {
     this.applyScopes();
     const rows = await super.get();
     const models = rows.map((row) => (this.model as any).hydrate(row) as T);
-    if (this.eagerLoad.length && models.length) {
-      await this.eagerLoadRelations(models);
+    if (models.length) {
+      if (this.eagerLoad.length) await eagerLoadTree(models, parseNested(this.eagerLoad));
+      if (this.withCountList.length) await loadCounts(models, this.withCountList);
     }
     return Collection.fromArray(models);
   }
@@ -153,19 +161,59 @@ export class ModelQueryBuilder<T extends Model> extends QueryBuilder<any> {
     return super.delete();
   }
 
-  private async eagerLoadRelations(models: T[]): Promise<void> {
-    for (const name of this.eagerLoad) {
-      const factory = (models[0] as any)[name];
-      if (typeof factory !== "function") {
-        throw new Error(
-          `Relation "${name}" introuvable sur ${this.model.name}. ` +
-            `Définissez une méthode ${name}() qui retourne this.hasMany/hasOne/belongsTo(...).`
-        );
-      }
-      const relation = factory.call(models[0]);
-      const keys = relation.getKeys(models);
-      const results = await relation.eager(keys);
-      relation.match(models, results, name);
+}
+
+/** Transforme ["a.b","a.c","d"] en Map { a: ["b","c"], d: [] }. */
+function parseNested(paths: string[]): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  for (const path of paths) {
+    const [head, ...rest] = path.split(".");
+    if (!map.has(head)) map.set(head, []);
+    if (rest.length) map.get(head)!.push(rest.join("."));
+  }
+  return map;
+}
+
+/** Charge récursivement un arbre de relations sur un lot de modèles. */
+async function eagerLoadTree(models: Model[], tree: Map<string, string[]>): Promise<void> {
+  if (!models.length) return;
+  for (const [name, subPaths] of tree) {
+    const factory = (models[0] as any)[name];
+    if (typeof factory !== "function") {
+      throw new Error(
+        `Relation "${name}" introuvable sur ${models[0].constructor.name}. ` +
+          `Définissez une méthode ${name}() qui retourne this.hasMany/hasOne/belongsTo/belongsToMany(...).`
+      );
     }
+    const relation = factory.call(models[0]);
+    const keys = relation.getKeys(models);
+    const results = await relation.eager(keys);
+    relation.match(models, results, name);
+
+    if (subPaths.length) {
+      const related: Model[] = [];
+      for (const m of models) {
+        const rel = m.getRelation(name);
+        if (rel == null) continue;
+        if (Array.isArray(rel)) related.push(...(rel as Model[]));
+        else related.push(rel as Model);
+      }
+      await eagerLoadTree(related, parseNested(subPaths));
+    }
+  }
+}
+
+/** Calcule les compteurs `<relation>_count` pour un lot de modèles. */
+async function loadCounts(models: Model[], names: string[]): Promise<void> {
+  for (const name of names) {
+    const factory = (models[0] as any)[name];
+    if (typeof factory !== "function") {
+      throw new Error(`Relation "${name}" introuvable pour withCount sur ${models[0].constructor.name}.`);
+    }
+    const relation = factory.call(models[0]);
+    if (typeof relation.loadCount !== "function") {
+      throw new Error(`withCount non supporté pour la relation "${name}".`);
+    }
+    await relation.loadCount(models, name);
   }
 }

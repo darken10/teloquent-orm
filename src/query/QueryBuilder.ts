@@ -34,6 +34,7 @@ export class QueryBuilder<Row = Record<string, unknown>> {
   protected components: QueryComponents = {
     table: "",
     columns: [],
+    rawColumns: [],
     distinct: false,
     wheres: [],
     orders: [],
@@ -56,6 +57,12 @@ export class QueryBuilder<Row = Record<string, unknown>> {
 
   select(...columns: string[]): this {
     this.components.columns = columns.length ? columns : [];
+    return this;
+  }
+
+  /** Ajoute une expression SQL brute à la sélection (non échappée). */
+  selectRaw(expression: string): this {
+    this.components.rawColumns.push(expression);
     return this;
   }
 
@@ -277,6 +284,7 @@ export class QueryBuilder<Row = Record<string, unknown>> {
     const clone = this.clone();
     clone.components.aggregate = { fn, column };
     clone.components.columns = [];
+    clone.components.rawColumns = [];
     clone.components.orders = [];
     clone.components.limit = undefined;
     clone.components.offset = undefined;
@@ -380,6 +388,7 @@ export class QueryBuilder<Row = Record<string, unknown>> {
     c.components = {
       ...this.components,
       columns: [...this.components.columns],
+      rawColumns: [...this.components.rawColumns],
       wheres: [...this.components.wheres],
       orders: [...this.components.orders],
       joins: [...this.components.joins],

@@ -71,8 +71,8 @@ Dernière mise à jour : 2026-06-19.
 
 ## 🟡 Partiel / à finaliser
 
-- [~] **Driver MySQL** (`mysql2`) — implémenté, SQL validé par tests unitaires ; à confirmer sur un vrai serveur (`npm run db:up && npm run test:mysql`)
-- [x] **Driver PostgreSQL** (`pg`) — implémenté + **validé** (émulateur pg-mem) : RETURNING, `$1`, upsert ON CONFLICT, relations, soft deletes, pagination. Bug `insertGetId` corrigé. À reconfirmer sur un vrai serveur (`npm run test:pg`)
+- [x] **Driver MySQL** (`mysql2`) — **validé sur vrai serveur** (77/77). Bug dates ISO corrigé.
+- [x] **Driver PostgreSQL** (`pg`) — **validé sur vrai serveur**. Bugs corrigés : `insertGetId`/RETURNING, interop ESM/CJS de `pg`, canonicalisation des clés d'eager loading (bigint renvoyés en chaînes).
 - [x] **Infra de test multi-dialecte** — docker-compose (mysql+postgres), helper env-driven, `tests/dialects.test.ts`, scripts `test:pg`/`test:mysql`, CI GitHub Actions
 - [ ] **Pool de connexions** — connexion simple pour l'instant (pas de pooling MySQL/PG)
 
@@ -84,16 +84,17 @@ Dernière mise à jour : 2026-06-19.
 - [x] `belongsToMany` (table pivot) + `attach` / `detach` / `sync` + eager loading + données pivot
 - [ ] `hasManyThrough` / `hasOneThrough`
 - [ ] Relations polymorphes (`morphTo`, `morphMany`)
-- [ ] Eager loading **imbriqué** : `with("posts.comments")`
+- [x] Eager loading **imbriqué** : `with("posts.comments")` (récursif, tous types de relations)
+- [x] `withCount` (hasMany / hasOne / belongsTo / belongsToMany)
 - [ ] Eager loading **contraint** : `with({ posts: q => q.where(...) })`
-- [ ] `whereHas` / `has` / `withCount`
+- [ ] `whereHas` / `has` / `doesntHave`
 
 ### Modèle
 - [x] **Soft deletes** (`deleted_at`, `delete` soft, `withTrashed`, `onlyTrashed`, `restore`, `forceDelete`, `trashed`) + `Blueprint.softDeletes()`
 - [x] **Scopes** locaux (`scopePublished` → `scope("published")`) et globaux (`addGlobalScope`)
 - [x] `firstOrNew`, `firstOrCreate`, `updateOrCreate`
 - [ ] `findMany`
-- [ ] `$hidden` / `$visible` / `$appends` à la sérialisation
+- [x] `$hidden` / `$visible` / `$appends` + `makeHidden` / `makeVisible` / `append` (instance)
 - [ ] `replicate()` (duplication d'instance)
 - [ ] Événements `saving` / `saved` / `retrieved` + classes Observer dédiées
 
@@ -120,9 +121,9 @@ Dernière mise à jour : 2026-06-19.
 - [ ] Seeders structurés
 
 ### Drivers & SGBD
-- [x] PostgreSQL validé (émulateur) + infra pour vrai serveur ; MySQL prêt à tester
-- [ ] Confirmer MySQL sur vrai serveur (docker fourni)
+- [x] SQLite, MySQL et PostgreSQL validés sur de vrais serveurs (docker + CI)
 - [ ] Pool de connexions (MySQL/PG)
+- [ ] Lecture/écriture séparées (read/write connections)
 - [ ] Driver `node:sqlite` natif activable (Node ≥ 22) en option de config
 - [ ] Lecture/écriture séparées (read/write connections)
 
@@ -142,7 +143,7 @@ Dernière mise à jour : 2026-06-19.
 2. ~~**`belongsToMany`**~~ ✅ fait
 3. ~~**Pagination** (`paginate`, `simplePaginate`, `chunk`)~~ ✅ fait
 4. ~~**MySQL + PostgreSQL** (validation PG + infra docker/CI multi-dialecte)~~ ✅ fait (confirmer MySQL sur vrai serveur)
-5. **Eager loading imbriqué** (`with("posts.comments")`) + `withCount`.
-6. **Runner de migrations** + `Schema().table()` (ALTER).
+5. ~~**Eager loading imbriqué** + `withCount`~~ ✅ fait
+6. **Query builder avancé** (`whereHas`, where imbriqués) ou **runner de migrations** + `Schema().table()`.
 5. **Pagination** (`paginate`, `chunk`).
 6. CI multi-SGBD + publication npm.

@@ -106,6 +106,24 @@ export class BelongsToMany<R extends Model> {
     }
   }
 
+  async loadCount(parents: Model[], relationName: string): Promise<void> {
+    const keys = [...new Set(parents.map((p) => p.getAttribute(this.parentKey)))];
+    const counts = new Map<string, number>();
+    if (keys.length) {
+      const rows = (await this.connection()
+        .table(this.table)
+        .select(this.foreignPivotKey)
+        .selectRaw("count(*) as aggregate")
+        .whereIn(this.foreignPivotKey, keys)
+        .groupBy(this.foreignPivotKey)
+        .get()) as Array<Record<string, unknown>>;
+      for (const r of rows) counts.set(String(r[this.foreignPivotKey]), Number(r.aggregate));
+    }
+    for (const p of parents) {
+      p.setAttribute(`${relationName}_count`, counts.get(String(p.getAttribute(this.parentKey))) ?? 0);
+    }
+  }
+
   // ----------------------------------------------------- gestion du pivot
   private connection() {
     return (this.parent.constructor as typeof Model).getConnection();

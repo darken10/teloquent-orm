@@ -24,6 +24,24 @@ export class BelongsTo<R extends Model> extends Relation<R> {
     return fresh.whereIn(this.localKey, keys).get();
   }
 
+  async loadCount(parents: Model[], relationName: string): Promise<void> {
+    const cls = this.related as unknown as typeof Model;
+    const keys = [...new Set(parents.map((p) => p.getAttribute(this.foreignKey)))];
+    const present = new Set<string>();
+    if (keys.length) {
+      const rows = (await cls
+        .getConnection()
+        .table(cls.getTable())
+        .select(this.localKey)
+        .whereIn(this.localKey, keys)
+        .get()) as Array<Record<string, unknown>>;
+      for (const r of rows) present.add(String(r[this.localKey]));
+    }
+    for (const p of parents) {
+      p.setAttribute(`${relationName}_count`, present.has(String(p.getAttribute(this.foreignKey))) ? 1 : 0);
+    }
+  }
+
   match(parents: Model[], results: R[], relationName: string): void {
     const byOwner = new Map<string, R>();
     for (const owner of results) byOwner.set(String(owner.getAttribute(this.localKey)), owner);

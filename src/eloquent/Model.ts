@@ -43,11 +43,21 @@ export class Model {
   static guarded: string[] = ["id"];
   /** Casting des attributs : { is_active: "boolean", meta: "json" }. */
   static casts: Record<string, CastType> = {};
+  /** Attributs masqués dans toObject()/toJSON() (ex. password). */
+  static hidden: string[] = [];
+  /** Si non vide : liste blanche des seuls attributs sérialisés. */
+  static visible: string[] = [];
+  /** Attributs calculés (accessors) à ajouter à la sérialisation. */
+  static appends: string[] = [];
 
   // ----------------------------------------------------- état d'instance
   protected attributes: Attributes = {};
   protected original: Attributes = {};
   protected loadedRelations: Record<string, unknown> = {};
+  /** Surcharges de sérialisation par instance. */
+  protected _hidden?: string[];
+  protected _visible?: string[];
+  protected _appends?: string[];
   /** L'enregistrement existe-t-il en base ? */
   public $exists = false;
 
@@ -504,10 +514,47 @@ export class Model {
   }
 
   // ------------------------------------------------------------- sérialisation
+  /** Masque des attributs pour cette instance uniquement. */
+  makeHidden(...keys: string[]): this {
+    this._hidden = [...(this._hidden ?? []), ...keys];
+    return this;
+  }
+
+  /** Force la visibilité d'attributs masqués, pour cette instance. */
+  makeVisible(...keys: string[]): this {
+    this._visible = [...(this._visible ?? []), ...keys];
+    return this;
+  }
+
+  /** Ajoute des attributs calculés à la sérialisation, pour cette instance. */
+  append(...keys: string[]): this {
+    this._appends = [...(this._appends ?? []), ...keys];
+    return this;
+  }
+
   toObject(): Attributes {
+    const ctor = this.constructor as typeof Model;
+    const forceVisible = new Set(this._visible ?? []);
+    const hidden = new Set<string>([...ctor.hidden, ...(this._hidden ?? [])]);
+    for (const k of forceVisible) hidden.delete(k);
+    const whitelist = ctor.visible;
+
+    const keep = (key: string): boolean => {
+      if (whitelist.length && !whitelist.includes(key) && !forceVisible.has(key)) return false;
+      return !hidden.has(key);
+    };
+
     const out: Attributes = {};
-    for (const key of Object.keys(this.attributes)) out[key] = this.getAttribute(key);
+    for (const key of Object.keys(this.attributes)) {
+      if (keep(key)) out[key] = this.getAttribute(key);
+    }
+    // Attributs calculés (accessors)
+    for (const key of [...ctor.appends, ...(this._appends ?? [])]) {
+      if (keep(key)) out[key] = this.getAttribute(key);
+    }
+    // Relations chargées
     for (const [name, value] of Object.entries(this.loadedRelations)) {
+      if (!keep(name)) continue;
       out[name] = value && typeof (value as any).toJSON === "function" ? (value as any).toJSON() : value;
     }
     return out;
@@ -523,6 +570,9 @@ const RESERVED = new Set([
   "attributes",
   "original",
   "loadedRelations",
+  "_hidden",
+  "_visible",
+  "_appends",
   "$exists",
 ]);
 

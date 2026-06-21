@@ -1,6 +1,7 @@
 import type { Model } from "../eloquent/Model.js";
 import { Collection } from "../eloquent/Collection.js";
 import { Relation } from "./Relation.js";
+import { countChildren } from "./support.js";
 
 /** Relation 1-N : un User a plusieurs Post (`posts.user_id = users.id`). */
 export class HasMany<R extends Model> extends Relation<R> {
@@ -19,6 +20,10 @@ export class HasMany<R extends Model> extends Relation<R> {
   async eager(keys: unknown[]): Promise<R[]> {
     const fresh = (this.related as any).query() as typeof this.query;
     return fresh.whereIn(this.foreignKey, keys).get();
+  }
+
+  async loadCount(parents: Model[], relationName: string): Promise<void> {
+    await countChildren(this.related, this.foreignKey, this.localKey, parents, relationName);
   }
 
   match(parents: Model[], results: R[], relationName: string): void {

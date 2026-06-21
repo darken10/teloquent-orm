@@ -29,6 +29,7 @@ export interface JoinClause {
 export interface QueryComponents {
   table: string;
   columns: string[];
+  rawColumns: string[];
   distinct: boolean;
   wheres: WhereClause[];
   orders: OrderClause[];

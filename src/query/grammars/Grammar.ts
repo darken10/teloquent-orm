@@ -50,7 +50,10 @@ export abstract class Grammar {
       parts.push(`${q.aggregate.fn}(${q.distinct && col !== "*" ? "distinct " : ""}${col}) as ${this.wrapSegment("aggregate")}`);
     } else {
       if (q.distinct) parts.push("distinct");
-      parts.push(q.columns.length ? this.columnize(q.columns) : "*");
+      const cols: string[] = [];
+      if (q.columns.length) cols.push(this.columnize(q.columns));
+      if (q.rawColumns.length) cols.push(...q.rawColumns);
+      parts.push(cols.length ? cols.join(", ") : "*");
     }
     parts.push("from", this.wrap(q.table));
 
