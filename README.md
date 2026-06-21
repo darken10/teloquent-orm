@@ -56,6 +56,19 @@ npm test          # lance la suite vitest
 
 La suite est en deux parties : des **tests unitaires purs** (génération SQL des 3 dialectes, QueryBuilder, helpers, Collection) qui tournent partout sans base, et des **tests d'intégration SQLite** (`tests/model.test.ts`) qui s'exécutent automatiquement si un driver SQLite est disponible (`better-sqlite3`, ou Node ≥ 22 avec `--experimental-sqlite`) et se désactivent proprement sinon.
 
+## Tester sur MySQL / PostgreSQL
+
+Par défaut les tests tournent sur SQLite. Pour rejouer la suite cross-dialecte (`tests/dialects.test.ts`) sur MySQL et PostgreSQL :
+
+```bash
+npm run db:up        # démarre Postgres + MySQL (docker compose)
+npm run test:pg      # tests sur PostgreSQL
+npm run test:mysql   # tests sur MySQL
+npm run db:down      # arrête et nettoie
+```
+
+Les paramètres de connexion sont surchargeables par variables d'env (voir `tests/helpers/db.ts`). La CI GitHub Actions (`.github/workflows/ci.yml`) exécute automatiquement la suite sur les trois SGBD.
+
 ## Documentation
 
 Voir **[GUIDE_TECHNIQUE.md](./GUIDE_TECHNIQUE.md)** : architecture détaillée, flux d'une requête, chaque couche, feuille de route, bonnes pratiques.

@@ -24,7 +24,7 @@ services:
       MYSQL_ROOT_PASSWORD: teloquent
       MYSQL_DATABASE: teloquent
     ports:
-      - "3306:3306"
+      - "3307:3306" # 3306 souvent déjà pris en local -> on expose sur 3307
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pteloquent"]
       interval: 3s

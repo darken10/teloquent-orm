@@ -71,9 +71,10 @@ Dernière mise à jour : 2026-06-19.
 
 ## 🟡 Partiel / à finaliser
 
-- [~] **Driver MySQL** (`mysql2`) — classe écrite, à brancher et tester sur une vraie base
-- [~] **Driver PostgreSQL** (`pg`) — classe écrite, à brancher et tester sur une vraie base
-- [~] **Pool de connexions** — connexion simple pour l'instant (pas de pooling MySQL/PG)
+- [~] **Driver MySQL** (`mysql2`) — implémenté, SQL validé par tests unitaires ; à confirmer sur un vrai serveur (`npm run db:up && npm run test:mysql`)
+- [x] **Driver PostgreSQL** (`pg`) — implémenté + **validé** (émulateur pg-mem) : RETURNING, `$1`, upsert ON CONFLICT, relations, soft deletes, pagination. Bug `insertGetId` corrigé. À reconfirmer sur un vrai serveur (`npm run test:pg`)
+- [x] **Infra de test multi-dialecte** — docker-compose (mysql+postgres), helper env-driven, `tests/dialects.test.ts`, scripts `test:pg`/`test:mysql`, CI GitHub Actions
+- [ ] **Pool de connexions** — connexion simple pour l'instant (pas de pooling MySQL/PG)
 
 ---
 
@@ -119,13 +120,14 @@ Dernière mise à jour : 2026-06-19.
 - [ ] Seeders structurés
 
 ### Drivers & SGBD
-- [ ] Brancher + tester MySQL et PostgreSQL en conditions réelles
+- [x] PostgreSQL validé (émulateur) + infra pour vrai serveur ; MySQL prêt à tester
+- [ ] Confirmer MySQL sur vrai serveur (docker fourni)
 - [ ] Pool de connexions (MySQL/PG)
 - [ ] Driver `node:sqlite` natif activable (Node ≥ 22) en option de config
 - [ ] Lecture/écriture séparées (read/write connections)
 
 ### Qualité & DX
-- [ ] Tests d'intégration MySQL + PostgreSQL (CI avec services Docker)
+- [x] Tests d'intégration MySQL + PostgreSQL (CI avec services Docker)
 - [ ] Tests des cas d'erreur (`findOrFail`, contrainte unique, rollback)
 - [ ] Couverture de code (coverage) + seuil minimal
 - [ ] Typage encore plus fort des attributs (génériques sur les colonnes du modèle)
@@ -139,7 +141,7 @@ Dernière mise à jour : 2026-06-19.
 1. ~~**Soft deletes** + **scopes**~~ ✅ fait
 2. ~~**`belongsToMany`**~~ ✅ fait
 3. ~~**Pagination** (`paginate`, `simplePaginate`, `chunk`)~~ ✅ fait
-4. Brancher et tester **MySQL** + **PostgreSQL** (les drivers existent déjà).
+4. ~~**MySQL + PostgreSQL** (validation PG + infra docker/CI multi-dialecte)~~ ✅ fait (confirmer MySQL sur vrai serveur)
 5. **Eager loading imbriqué** (`with("posts.comments")`) + `withCount`.
 6. **Runner de migrations** + `Schema().table()` (ALTER).
 5. **Pagination** (`paginate`, `chunk`).
