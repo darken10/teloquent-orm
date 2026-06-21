@@ -7,9 +7,9 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "repository": { "type": "git", "url": "git+https://github.com/AfricaSys/teloquent.git" },
-  "homepage": "https://github.com/AfricaSys/teloquent#readme",
-  "bugs": { "url": "https://github.com/AfricaSys/teloquent/issues" },
+  "repository": { "type": "git", "url": "git+https://github.com/darken10/teloquent-orm.git" },
+  "homepage": "https://github.com/darken10/teloquent-orm#readme",
+  "bugs": { "url": "https://github.com/darken10/teloquent-orm/issues" },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
